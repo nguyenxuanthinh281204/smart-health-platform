@@ -1,0 +1,26 @@
+name: 'smart_health_dbt'
+version: '1.0.0'
+config-version: 2
+
+# Profile defined in profiles.yml
+profile: 'smart_health_dw'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  smart_health_dbt:
+    gold:
+      +materialized: table
+      +schema: gold
+      +post-hook:
+        - "GRANT SELECT ON {{ this }} TO bi_reader"
+        - "GRANT SELECT ON {{ this }} TO llm_agent"

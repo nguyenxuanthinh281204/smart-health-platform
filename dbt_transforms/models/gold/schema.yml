@@ -1,0 +1,147 @@
+version: 2
+
+models:
+  - name: dim_location
+    description: "Geospatial dimension table containing authoritative UN OCHA P-Codes, boundary polygons, population, and climatic zones."
+    columns:
+      - name: location_key
+        description: "Standardized UN OCHA administrative P-Code (e.g., BD-30 for Dhaka)"
+        tests:
+          - unique
+          - not_null
+      - name: province_name_en
+        description: "English name of the administrative unit"
+        tests:
+          - not_null
+      - name: province_name_local
+        description: "Local language / Bengali name of the administrative unit"
+      - name: climate_zone
+        description: "Climatic classification of the region"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Tropical Monsoon', 'Coastal Monsoon', 'Highland Monsoon']
+      - name: centroid_lat
+        description: "Centroid latitude coordinate for GIS pin drop"
+        tests:
+          - not_null
+      - name: centroid_long
+        description: "Centroid longitude coordinate for GIS pin drop"
+        tests:
+          - not_null
+      - name: population
+        description: "Census population benchmark used for incidence rate normalization"
+        tests:
+          - not_null
+      - name: geom_polygon
+        description: "Boundary polygon in GeoJSON format for Choropleth maps"
+        tests:
+          - not_null
+
+  - name: dim_date
+    description: "Calendar and Epidemiological date dimension standardizing on ISO-8601 Epi-Weeks (Monday-Sunday)."
+    columns:
+      - name: date_key
+        description: "Surrogate primary key formatted as YYYYMMDD integer"
+        tests:
+          - unique
+          - not_null
+      - name: full_date
+        description: "Standard ISO calendar date"
+        tests:
+          - unique
+          - not_null
+      - name: epi_week_key
+        description: "6-digit Epidemiological week surrogate key (YYYYWW)"
+        tests:
+          - not_null
+      - name: epi_week
+        description: "ISO week number (1 to 53)"
+        tests:
+          - not_null
+      - name: epi_year
+        description: "ISO Epidemiological Year"
+        tests:
+          - not_null
+      - name: month_number
+        description: "Calendar month (1 to 12)"
+        tests:
+          - not_null
+      - name: quarter
+        description: "Calendar quarter (1 to 4)"
+        tests:
+          - not_null
+      - name: is_rainy_season
+        description: "Boolean flag: True if date falls within South Asian Monsoon (June to October)"
+        tests:
+          - not_null
+
+  - name: fact_disease_climate_weekly
+    description: "Core Analytical Mart Fact Table combining public health surveillance and meteorological indicators at the Epi-week grain."
+    columns:
+      - name: fact_id
+        description: "Primary key combining location_key, epi_week_key, and disease_type"
+        tests:
+          - unique
+          - not_null
+      - name: location_key
+        description: "Standardized UN OCHA P-Code foreign key referencing dim_location"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_location')
+              field: location_key
+      - name: epi_week_key
+        description: "ISO Epidemiological week key (YYYYWW)"
+        tests:
+          - not_null
+      - name: disease_type
+        description: "Harmonized disease indicator"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['DENGUE', 'RESPIRATORY', 'CHOLERA', 'COVID19', 'MALARIA']
+      - name: total_cases
+        description: "Cumulative new incident cases diagnosed during the Epi-week"
+        tests:
+          - not_null
+      - name: total_hospitalized
+        description: "Cumulative inpatient hospital admissions during the Epi-week"
+        tests:
+          - not_null
+      - name: total_deaths
+        description: "Cumulative mortality count during the Epi-week"
+        tests:
+          - not_null
+      - name: incidence_rate_per_100k
+        description: "Population-normalized incidence rate per 100,000 population: (cases / population) * 100,000"
+        tests:
+          - not_null
+      - name: avg_temperature_c
+        description: "Mean ambient temperature across the 7-day Epi-week (°C)"
+      - name: max_temperature_c
+        description: "Maximum recorded temperature during the Epi-week (°C)"
+      - name: min_temperature_c
+        description: "Minimum recorded temperature during the Epi-week (°C)"
+      - name: total_rainfall_mm
+        description: "Total cumulative precipitation during the Epi-week (mm)"
+        tests:
+          - not_null
+      - name: avg_humidity_pct
+        description: "Mean relative humidity percentage during the Epi-week (%)"
+      - name: avg_pm25
+        description: "Mean airborne PM2.5 particulate concentration (ug/m3)"
+      - name: avg_aqi
+        description: "Mean harmonized US EPA Air Quality Index"
+      - name: rainfall_lag_2w
+        description: "Cumulative precipitation lagged by 2 weeks (vector larval development indicator)"
+      - name: rainfall_lag_4w
+        description: "Cumulative precipitation lagged by 4 weeks (clinical transmission surge indicator)"
+      - name: temp_lag_2w
+        description: "Mean temperature lagged by 2 weeks (Extrinsic Incubation Period indicator)"
+      - name: risk_level
+        description: "Stratified multi-factor epidemiological risk score based on incidence rate and climate lags"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Low', 'Moderate', 'High', 'Severe']

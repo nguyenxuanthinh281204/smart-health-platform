@@ -44,23 +44,23 @@
 ---
 
 ### SPRINT 3: DATA WAREHOUSE & DBT MODELING (GOLD LAYER - CORE ACADEMIC FOCUS)
-- [ ] **Task 3.1:** Initialize dbt project (`dbt init dbt_transforms`), configure `profiles.yml` targeting PostgreSQL.
-- [ ] **Task 3.2:** Build Dimension Tables:
+- [x] **Task 3.1:** Initialize dbt project (`dbt init dbt_transforms`), configure `profiles.yml` targeting PostgreSQL.
+- [x] **Task 3.2:** Build Dimension Tables:
   - `dim_date`: Date key, epidemiological week (`epi_week`), year, month, quarter.
   - `dim_location`: P-Code key, province name, centroid coordinates, population, boundary polygon.
-- [ ] **Task 3.3:** Build Fact Table `fact_disease_climate_weekly`:
+- [x] **Task 3.3:** Build Fact Table `fact_disease_climate_weekly`:
   - Grain: 1 record per `(location_key, epi_week_key)`.
   - Health Metrics: New cases, hospitalizations, deaths.
   - Climate Metrics: Average/max/min temperature, cumulative rainfall, average humidity, AQI, PM2.5.
-- [ ] **Task 3.4:** Implement Advanced dbt Window Functions & Feature Engineering:
+- [x] **Task 3.4:** Implement Advanced dbt Window Functions & Feature Engineering:
   - **Incidence Rate per 100,000 Population:** `(cases / population) * 100000`.
   - **Time-Lag Features:**
     - `rainfall_lag_2w`: Cumulative rainfall lagged by 2 weeks.
     - `rainfall_lag_4w`: Cumulative rainfall lagged by 4 weeks.
     - `temp_lag_2w`: Mean temperature lagged by 2 weeks.
-- [ ] **Task 3.5:** Configure automated dbt tests (`unique`, `not_null`, `relationships`, `accepted_values`).
-- [ ] **Task 3.6:** Compile comprehensive documentation and data lineage graph (`dbt docs generate`).
-> **Definition of Done (DoD):** `dbt run` and `dbt test` pass with 100% success; Lag 2W/4W and Incidence Rate accurately calculated; Lineage graph displays Staging $\to$ Intermediate $\to$ Marts.
+- [x] **Task 3.5:** Configure automated dbt tests (`unique`, `not_null`, `relationships`, `accepted_values`).
+- [x] **Task 3.6:** Compile comprehensive documentation and data lineage graph (`dbt docs generate`).
+> **Definition of Done (DoD):** `dbt run` and `dbt test` pass with 100% success; Lag 2W/4W and Incidence Rate accurately calculated; Lineage graph displays Staging $\to$ Intermediate $\to$ Marts. (VERIFIED: 3 models created, 1,576 weekly fact rows, 36/36 dbt tests passed, 13/13 audit checks passed).
 
 ---
 

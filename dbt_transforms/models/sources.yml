@@ -1,0 +1,64 @@
+version: 2
+
+sources:
+  - name: bronze
+    schema: bronze
+    description: "Raw ingested data lake storage in PostgreSQL"
+    tables:
+      - name: raw_admin_boundaries
+        description: "Authoritative administrative unit boundaries and UN OCHA P-Codes from HDX COD-AB"
+        columns:
+          - name: adm1_pcode
+            description: "UN OCHA standardized P-Code (e.g., BD-30)"
+          - name: adm1_name_en
+            description: "English administrative name"
+          - name: population
+            description: "Census population benchmark"
+          - name: centroid_lat
+            description: "Centroid latitude"
+          - name: centroid_long
+            description: "Centroid longitude"
+          - name: geom_geojson
+            description: "Polygon boundary geometry in GeoJSON format"
+
+  - name: silver
+    schema: silver
+    description: "Cleansed, deduplicated, and harmonized staging tables"
+    tables:
+      - name: stg_disease_daily
+        description: "Harmonized daily epidemiological surveillance reports"
+        columns:
+          - name: location_key
+            description: "Standardized UN OCHA P-Code"
+          - name: record_date
+            description: "Observation date"
+          - name: disease_type
+            description: "Harmonized disease type (e.g. DENGUE)"
+          - name: new_cases
+            description: "Daily incident new cases"
+          - name: hospitalizations
+            description: "Daily inpatient admissions"
+          - name: deaths
+            description: "Daily mortality count"
+
+      - name: stg_climate_daily
+        description: "Cleansed and imputed daily meteorological and environmental indicators"
+        columns:
+          - name: location_key
+            description: "Standardized UN OCHA P-Code"
+          - name: record_date
+            description: "Observation date"
+          - name: max_temperature_c
+            description: "Daily maximum temperature (°C)"
+          - name: min_temperature_c
+            description: "Daily minimum temperature (°C)"
+          - name: avg_temperature_c
+            description: "Daily mean temperature (°C)"
+          - name: rainfall_mm
+            description: "Daily cumulative precipitation (mm)"
+          - name: humidity_pct
+            description: "Daily mean relative humidity (%)"
+          - name: pm25_ug_m3
+            description: "Daily mean PM2.5 concentration (ug/m3)"
+          - name: aqi_value
+            description: "Harmonized US EPA Air Quality Index"
