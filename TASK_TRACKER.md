@@ -11,8 +11,8 @@
 
 | Sprint | Focus Area | Key Deliverable | Status |
 | :---: | :--- | :--- | :---: |
-| **Sprint 1** | Container Infrastructure & Raw Ingestion | Docker operational, Bronze Layer raw data ingested | `[/]` In Progress |
-| **Sprint 2** | Data Cleansing, Harmonization & Silver Layer | Deduplication, Wide-to-Long, P-Code standardization | `[ ]` Pending |
+| **Sprint 1** | Container Infrastructure & Raw Ingestion | Docker operational, Bronze Layer raw data ingested | `[x]` Completed |
+| **Sprint 2** | Data Cleansing, Harmonization & Silver Layer | Deduplication, Wide-to-Long, P-Code standardization | `[/]` In Progress |
 | **Sprint 3** | Data Warehouse & dbt Modeling (Gold Layer) | Star Schema, dbt models, Lag 2-4W, Incidence Rate | `[ ]` Pending |
 | **Sprint 4** | Serving Layer & Interactive BI Dashboard | Looker Studio / Streamlit Choropleth Map & Trends | `[ ]` Pending |
 | **Sprint 5** | LLM Text-to-SQL Agent & Project Handover | Natural language querying, presentation deck & demo | `[ ]` Pending |
@@ -24,12 +24,12 @@
 ### SPRINT 1: CONTAINER INFRASTRUCTURE & RAW INGESTION (BRONZE LAYER)
 - [x] **Task 1.1:** Synthesize project requirements from technical documentation and 10 data source references.
 - [x] **Task 1.2:** Deploy Zero Context Loss AI Operating Framework in English.
-- [ ] **Task 1.3:** Initialize standardized Data Engineering repository directory structure.
-- [ ] **Task 1.4:** Author `docker-compose.yml` (PostgreSQL 16, Mage.ai/Prefect, persistent volume bindings, health checks).
-- [ ] **Task 1.5:** Ingest UN OCHA Geospatial Administrative Boundaries (GeoJSON / P-Code master file).
-- [ ] **Task 1.6:** Implement automated Python ingestion scripts for Dengue & Climate data (Kaggle & Open-Meteo API).
-- [ ] **Task 1.7:** Land raw datasets into PostgreSQL `bronze` schema with audit columns (`_ingested_at`, `_source_file`).
-> **Definition of Done (DoD):** Docker Compose boots up cleanly; Database connectivity verified; At least 2 core raw datasets successfully populated in the `bronze` schema.
+- [x] **Task 1.3:** Initialize standardized Data Engineering repository directory structure.
+- [x] **Task 1.4:** Author `docker-compose.yml` (PostgreSQL 16, Mage.ai/Prefect, persistent volume bindings, health checks).
+- [x] **Task 1.5:** Ingest UN OCHA Geospatial Administrative Boundaries (GeoJSON / P-Code master file).
+- [x] **Task 1.6:** Implement automated Python ingestion scripts for Dengue & Climate data (Kaggle & Open-Meteo API).
+- [x] **Task 1.7:** Land raw datasets into PostgreSQL `bronze` schema with audit columns (`_ingested_at`, `_source_file`).
+> **Definition of Done (DoD):** Docker Compose boots up cleanly; Database connectivity verified; At least 2 core raw datasets successfully populated in the `bronze` schema. (VERIFIED: 3 tables, 11,696 records populated).
 
 ---
 

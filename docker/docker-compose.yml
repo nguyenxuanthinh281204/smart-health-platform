@@ -1,0 +1,80 @@
+# ==============================================================================
+# SMART HEALTH DATA PLATFORM - MULTI-CONTAINER INFRASTRUCTURE
+# ==============================================================================
+# Services:
+# 1. postgres: PostgreSQL 16 Data Warehouse (Schemas: bronze, silver, gold)
+# 2. mageai: Mage.ai Data Pipeline Orchestrator & DAG Scheduler
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. PostgreSQL 16 Data Warehouse
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: smart_health_postgres
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-smart_health_dw}
+      POSTGRES_USER: ${POSTGRES_USER:-de_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-de_admin_secure_pass_2026}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./init_db.sql:/docker-entrypoint-initdb.d/init_db.sql:ro
+    networks:
+      - smart_health_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-de_admin} -d ${POSTGRES_DB:-smart_health_dw}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ----------------------------------------------------------------------------
+  # 2. Mage.ai Pipeline Orchestrator
+  # ----------------------------------------------------------------------------
+  mageai:
+    image: mageai/mageai:latest
+    container_name: smart_health_mageai
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      USER_CODE_PATH: /home/src/${MAGE_PROJECT_NAME:-smart_health_pipelines}
+      POSTGRES_DB: ${POSTGRES_DB:-smart_health_dw}
+      POSTGRES_USER: ${POSTGRES_USER:-de_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-de_admin_secure_pass_2026}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      PYTHONPATH: /home/src
+    ports:
+      - "${MAGE_PORT:-6789}:6789"
+    volumes:
+      - mage_data:/home/src
+      - ../data:/home/src/data
+      - ../pipelines:/home/src/pipelines
+      - ../dbt_transforms:/home/src/dbt_transforms
+    networks:
+      - smart_health_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+# ------------------------------------------------------------------------------
+# Networks & Persistent Volumes
+# ------------------------------------------------------------------------------
+networks:
+  smart_health_net:
+    name: smart_health_net
+    driver: bridge
+
+volumes:
+  pg_data:
+    name: smart_health_pg_data
+  mage_data:
+    name: smart_health_mage_data
