@@ -59,6 +59,7 @@ services:
       - ../data:/home/src/data
       - ../pipelines:/home/src/pipelines
       - ../dbt_transforms:/home/src/dbt_transforms
+      - ../scripts:/home/src/scripts
     networks:
       - smart_health_net
     depends_on:

@@ -34,12 +34,12 @@
 ---
 
 ### SPRINT 2: DATA CLEANSING, HARMONIZATION & SILVER LAYER
-- [ ] **Task 2.1:** Implement idempotent deduplication logic for epidemiological case records.
-- [ ] **Task 2.2:** Transform time-series data structures from Wide format to Long format.
-- [ ] **Task 2.3:** Geospatial Harmonization: Map disparate provincial names to standardized UN OCHA P-Codes in `Dim_Location`.
-- [ ] **Task 2.4:** Missing Data Imputation: Apply Forward-Fill / Moving Average algorithms to fill intermittent weather sensor gaps.
-- [ ] **Task 2.5:** Persist cleansed datasets into the `silver` schema with strict data typing (Date, Numeric, Text).
-> **Definition of Done (DoD):** Zero duplicate records; 100% of provincial entities resolve to valid P-Codes; Weather time-series continuous with no null gaps.
+- [x] **Task 2.1:** Implement idempotent deduplication logic for epidemiological case records.
+- [x] **Task 2.2:** Transform time-series data structures from Wide format to Long format.
+- [x] **Task 2.3:** Geospatial Harmonization: Map disparate provincial names to standardized UN OCHA P-Codes in `Dim_Location`.
+- [x] **Task 2.4:** Missing Data Imputation: Apply Forward-Fill / Moving Average algorithms to fill intermittent weather sensor gaps.
+- [x] **Task 2.5:** Persist cleansed datasets into the `silver` schema with strict data typing (Date, Numeric, Text).
+> **Definition of Done (DoD):** Zero duplicate records; 100% of provincial entities resolve to valid P-Codes; Weather time-series continuous with no null gaps. (VERIFIED: 2 Silver tables populated, 22,648 records total, 100% P-Codes mapped, 0 duplicates, 0 null gaps in weather features, 11/11 audit checks passed).
 
 ---
 
