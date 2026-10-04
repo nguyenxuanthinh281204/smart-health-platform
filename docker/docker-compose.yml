@@ -54,12 +54,14 @@ services:
       PYTHONPATH: /home/src
     ports:
       - "${MAGE_PORT:-6789}:6789"
+      - "8501:8501"
     volumes:
       - mage_data:/home/src
       - ../data:/home/src/data
       - ../pipelines:/home/src/pipelines
       - ../dbt_transforms:/home/src/dbt_transforms
       - ../scripts:/home/src/scripts
+      - ../bi_dashboard:/home/src/bi_dashboard
     networks:
       - smart_health_net
     depends_on:

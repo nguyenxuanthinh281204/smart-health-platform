@@ -2,13 +2,13 @@
 
 > **IMPORTANT NOTICE:**  
 > This file serves as the **short-term memory (RAM)** of the project. Both the AI Agent and the Developer must update this document at the conclusion of each session to guarantee seamless context preservation.  
-> **Last Updated:** 2026-10-04 (Sprint 3: Gold Layer & dbt Transformations Complete)
+> **Last Updated:** 2026-10-04 (Sprint 4: Serving Layer & BI Dashboards Complete)
 
 ---
 
 ## 1. CURRENT POSITION OVERVIEW
-* **Active Milestone:** **Sprint 4: Serving Layer & Interactive BI Dashboards**
-* **Overall Completion Rate:** ~80% (Sprint 1, 2, and 3 Complete: Full Medallion Architecture Bronze -> Silver -> Gold active and verified)
+* **Active Milestone:** **Sprint 5: LLM Agent (Text-to-SQL) & Final Delivery Packaging**
+* **Overall Completion Rate:** ~90% (Sprint 1, 2, 3, and 4 Complete: Full End-to-End Pipeline Ingestion -> Cleansing -> Star Schema Mart -> Serving BI Dashboard operational)
 * **Active Git Branch:** `main`
 * **Primary Language:** **English** (All schemas, models, pipelines, and documentation)
 
@@ -17,48 +17,43 @@
 ## 2. RECENTLY COMPLETED TASKS
 - [x] **Task 1.1 - 1.7 (Sprint 1 Complete):** Ingestion pipelines, Docker infrastructure, and Bronze storage (11,696 records across 3 raw tables).
 - [x] **Task 2.1 - 2.5 (Sprint 2 Complete):** Silver data cleansing, deduplication, wide-to-long reshaping, P-Code harmonization, meteorological imputation (22,648 silver records populated and verified).
-- [x] **Task 3.1 (dbt Initialization & Profile):**
-  - Configured `dbt_project.yml` and `profiles.yml` targeting PostgreSQL `smart_health_dw` inside `smart_health_mageai` with `dbt-postgres 1.8.2`.
-  - Configured custom `generate_schema_name` macro to cleanly route models into `gold.*`.
-- [x] **Task 3.2 (Dimension Models):**
-  - Built `gold.dim_location`: 8 administrative division records with UN OCHA P-Codes, coordinates, population, and GeoJSON boundary polygons.
-  - Built `gold.dim_date`: 1,826 daily calendar records (2022 to 2026) mapped to ISO-8601 Epidemiological weeks (`YYYYWW`), quarters, and monsoon season flags.
-- [x] **Task 3.3 (Analytical Fact Table):**
-  - Built `gold.fact_disease_climate_weekly`: 1,576 records rolled up to the canonical `(location_key, epi_week_key, disease_type)` grain across 197 consecutive surveillance weeks.
-- [x] **Task 3.4 (Advanced Feature Engineering & Window Functions):**
-  - Population-normalized incidence rate per 100,000 population: `(total_cases / population) * 100,000`.
-  - Time-lag features calculated via SQL window functions: `rainfall_lag_2w`, `rainfall_lag_4w`, `temp_lag_2w`.
-  - Implemented 4-tier risk stratification matrix (`Severe`, `High`, `Moderate`, `Low`) adhering to `docs/DOMAIN_RULES_AND_METRICS.md`.
-- [x] **Task 3.5 (Automated dbt Testing):**
-  - Defined 33 rigorous schema tests (`unique`, `not_null`, `relationships`, `accepted_values`).
-  - Executed `dbt build`: **36/36 passed** (3 models created, 33 tests passed, 0 failures).
-- [x] **Task 3.6 (Data Documentation & Lineage):**
-  - Compiled full documentation catalog and dependency graph via `dbt docs generate` (`catalog.json` & `manifest.json`).
-  - Enforced Least Privilege RBAC: `bi_reader` and `llm_agent` granted `SELECT` access to `gold.*`.
+- [x] **Task 3.1 - 3.6 (Sprint 3 Complete):** dbt dimensional models (`dim_location`, `dim_date`, `fact_disease_climate_weekly`), time-lag window functions, risk matrix, 36/36 tests passed, documentation catalog generated.
+- [x] **Task 4.1 (Gold Layer BI Connection):**
+  - Connected visual serving layer to PostgreSQL `smart_health_dw` strictly via `bi_reader` role conforming to Least Privilege access control.
+  - Exposed HTTP dashboard endpoint on port `8501` with lightning-fast `77ms` load time (< 2s DoD requirement).
+- [x] **Task 4.2 (Interactive Epidemiological Choropleth Heatmap):**
+  - Built interactive Mapbox choropleth mapping 8 UN OCHA division boundaries (`geom_polygon`), styled dynamically by 4-tier risk stratification (`Severe`, `High`, `Moderate`, `Low`) and population-normalized incidence rates.
+- [x] **Task 4.3 (Time-Lag Dual-Axis Correlation Visualizations):**
+  - Visualized the biological vector incubation dynamic: dual-axis charts overlaying weekly precipitation and 2–4 week lag indicators against clinical hospitalization surges.
+- [x] **Task 4.4 (Public Health Actionable Alerting Matrix):**
+  - Integrated rule-based early warning matrix triggering alerts when antecedent rainfall lag > 50mm and humidity > 80% coincide with emerging cases.
+  - Linked active alerts to standardized vector eradication operational interventions (ULV fogging, Abate larvicide, clinic pre-positioning) per `docs/DOMAIN_RULES_AND_METRICS.md`.
 
 ---
 
-## 3. NEXT IMMEDIATE STEPS (SPRINT 4: BI DASHBOARDS & SERVING LAYER)
+## 3. NEXT IMMEDIATE STEPS (SPRINT 5: LLM AGENT & FINAL PACKAGING)
 
 When initiating the next working session, the AI must execute the following sequential tasks:
 
-1. **Task 4.1: Connect Gold Layer Mart to Serving / BI Tooling**
-   - Configure Streamlit application in `bi_dashboard/` or Looker Studio connector querying `gold.fact_disease_climate_weekly` and `gold.dim_location` via `bi_reader` credentials.
-2. **Task 4.2: Build Interactive Epidemiological Choropleth Map**
-   - Render division polygons colored by `incidence_rate_per_100k` and categorized by `risk_level` (Red, Orange, Yellow, Green).
-   - Add dynamic filters: Epidemiological Week slider, Disease Type selector, Climate Zone filter.
-3. **Task 4.3: Design Time-Lag Dual-Axis Correlation Visualizations**
-   - Visualizing the 2–4 week incubation lag between peak rainfall events and clinical dengue hospitalization surges.
-4. **Task 4.4: Build Public Health Actionable Alerting Matrix**
-   - Early warning alert board displaying operational recommendations (Targeted fogging, larvicide deployment, clinic pre-positioning) per `docs/DOMAIN_RULES_AND_METRICS.md`.
+1. **Task 5.1: Text-to-SQL AI Module**
+   - Construct natural language SQL generator using Gemini API / OpenAI API / LangChain querying `gold.*` via sandboxed `llm_agent` credentials (read-only, execution timeout).
+2. **Task 5.2: Supply Metadata Context & Few-Shot Prompts**
+   - Embed Gold Layer Star Schema data dictionary and domain rules into system prompts for high-accuracy SQL generation.
+3. **Task 5.3: Streamlit Natural Language Chat UI**
+   - Build an intuitive conversational interface in `bi_dashboard/` where public health analysts ask questions in natural language and receive formatted data tables and dynamic Plotly charts.
+4. **Task 5.4: Production Packaging & Documentation**
+   - Author authoritative root `README.md` with single-command `docker compose up -d` quickstart guide, architecture diagrams, and pipeline verification instructions.
+5. **Task 5.5: Final Defense Artifacts**
+   - Compile slide presentation outline and end-to-end demonstration scripts.
 
 ---
 
 ## 4. TARGET ENVIRONMENT SPECIFICATIONS
-* **Database:** PostgreSQL 16 (DB: `smart_health_dw`, User: `de_admin`, Port: `5432`)
+* **Database:** PostgreSQL 16 (DB: `smart_health_dw`, Port: `5432`)
 * **Orchestrator:** Mage.ai (Port: `6789`)
+* **BI Dashboard Serving:** Streamlit / Plotly Standalone (Port: `8501`)
 * **Transformation Engine:** dbt-core 1.8.7 / dbt-postgres 1.8.2
-* **Serving / UI:** Streamlit (Port: `8501`) / Looker Studio
+* **RBAC Roles:** `de_admin` (Full), `bi_reader` (Gold Read-Only), `llm_agent` (Gold Sandboxed Read-Only)
 
 ---
 

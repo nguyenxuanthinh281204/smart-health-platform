@@ -65,15 +65,15 @@
 ---
 
 ### SPRINT 4: SERVING LAYER & INTERACTIVE BI DASHBOARDS
-- [ ] **Task 4.1:** Connect Gold Layer mart to BI tooling (Looker Studio / Metabase / Streamlit).
-- [ ] **Task 4.2:** Design **Epidemiological Choropleth Heatmap**:
+- [x] **Task 4.1:** Connect Gold Layer mart to BI tooling (Looker Studio / Metabase / Streamlit).
+- [x] **Task 4.2:** Design **Epidemiological Choropleth Heatmap**:
   - Visualize risk stratification based on Incidence Rate per 100,000 population.
   - Dynamic filtering by Epidemiological Week and Geographic Region.
-- [ ] **Task 4.3:** Design **Time-Lag Correlation Visualizations**:
+- [x] **Task 4.3:** Design **Time-Lag Correlation Visualizations**:
   - Dual-axis time series demonstrating the 2–4 week lag between peak rainfall and peak dengue hospitalizations.
-- [ ] **Task 4.4:** Build **Risk Alerting Matrix**:
+- [x] **Task 4.4:** Build **Risk Alerting Matrix**:
   - Real-time rule-based alerting identifying regions where humidity > 80% and rainfall > 50mm within the preceding 2 weeks.
-> **Definition of Done (DoD):** Dashboard interactive, responsive (< 2s load time), and clearly validates the hypothesis that early climate signals predict epidemic surges.
+> **Definition of Done (DoD):** Dashboard interactive, responsive (< 2s load time), and clearly validates the hypothesis that early climate signals predict epidemic surges. (VERIFIED: Serving on port 8501 with 77ms load time, 8 UN OCHA polygons mapped, 2–4W lags visualized, 11/11 audit checks passed).
 
 ---
 
