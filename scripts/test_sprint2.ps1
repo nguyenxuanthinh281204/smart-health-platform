@@ -9,16 +9,16 @@ Write-Host "`n==================================================================
 Write-Host " SMART HEALTH DATA PLATFORM: SPRINT 2 SILVER LAYER AUDIT " -ForegroundColor Green
 Write-Host "====================================================================" -ForegroundColor Cyan
 
-$passCount = 0
-$failCount = 0
+$script:passCount = 0
+$script:failCount = 0
 
 function Report-Check($title, $isPassed, $detail) {
     if ($isPassed) {
-        $global:passCount++
+        $script:passCount++
         Write-Host "  [PASS] $title" -ForegroundColor Green
         if ($detail) { Write-Host "         $detail" -ForegroundColor Gray }
     } else {
-        $global:failCount++
+        $script:failCount++
         Write-Host "  [FAIL] $title" -ForegroundColor Red
         if ($detail) { Write-Host "         $detail" -ForegroundColor Yellow }
     }
@@ -104,10 +104,10 @@ if ($llmAccess -match "permission denied") {
 
 # Summary
 Write-Host "`n====================================================================" -ForegroundColor Cyan
-Write-Host " SPRINT 2 AUDIT RESULT: $passCount PASSED, $failCount FAILED " -ForegroundColor $(if ($failCount -eq 0) { "Green" } else { "Red" })
+Write-Host " SPRINT 2 AUDIT RESULT: $script:passCount PASSED, $script:failCount FAILED " -ForegroundColor $(if ($script:failCount -eq 0) { "Green" } else { "Red" })
 Write-Host "====================================================================" -ForegroundColor Cyan
 
-if ($failCount -eq 0) {
+if ($script:failCount -eq 0) {
     Write-Host "`nAll Sprint 2 requirements are 100% verified, robust, and production-ready!`n" -ForegroundColor Green
 } else {
     Write-Host "`nSome checks failed. Please inspect the log messages above.`n" -ForegroundColor Red
