@@ -1,0 +1,49 @@
+# Environment Variables & Secrets
+.env
+.env.local
+*.pem
+*.key
+
+# Python Bytecode & Environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Data Directories (Local Data Lake)
+data/bronze/*
+!data/bronze/.gitkeep
+data/silver/*
+!data/silver/.gitkeep
+data/gold/*
+!data/gold/.gitkeep
+
+# dbt Artifacts & Cache
+dbt_transforms/target/
+dbt_transforms/dbt_packages/
+dbt_transforms/logs/
+dbt_transforms/dbt_modules/
+
+# IDE & OS Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker Volume Mounts
+docker/pg_data/
+docker/mage_data/
+
+# Prompt Files & Scratch Notes
+prompt
+prompt/
+prompt.*
+*.prompt
+
