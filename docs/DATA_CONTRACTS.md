@@ -148,3 +148,24 @@ All data types are cast to strict SQL types. Missing numerical values are impute
 | `rainfall_lag_4w` | `NUMERIC(7,2)`| Yes | `LAG(total_rainfall_mm, 4) OVER (...)` |
 | `temp_lag_2w` | `NUMERIC(5,2)`| Yes | `LAG(avg_temperature_c, 2) OVER (...)` |
 | `risk_level` | `VARCHAR(20)` | `NOT NULL` | Evaluated via `DOMAIN_RULES_AND_METRICS.md` |
+
+### 4.4. `gold.fact_outbreak_forecast_weekly`
+* **Role:** Predictive Analytics & 4-Week Ahead Outbreak Projections
+* **Primary Key:** `forecast_id` (`location_key || '_' || base_epi_week_key || '_H4'`)
+* **Foreign Keys:** `location_key` $\to$ `gold.dim_location(location_key)`
+
+| Column Name | Data Type | Constraints | Formulation / Aggregation Logic |
+| :--- | :--- | :---: | :--- |
+| `forecast_id` | `VARCHAR(60)` | `PRIMARY KEY` | Surrogate key (`location_key || '_' || base_epi_week_key || '_H4'`) |
+| `location_key` | `VARCHAR(20)` | `FK, NOT NULL` | Standardized UN OCHA P-Code |
+| `base_epi_week_key` | `INTEGER` | `NOT NULL` | Baseline observation week from which forecast was generated |
+| `forecast_epi_week_key` | `INTEGER` | `NOT NULL` | 4-week forward horizon epidemiological week |
+| `predicted_cases_4w` | `INTEGER` | `NOT NULL` | Ensemble Machine Learning point estimate |
+| `predicted_incidence_rate_per_100k` | `NUMERIC(8,2)` | `NOT NULL` | `ROUND((predicted_cases_4w::numeric / population) * 100000, 2)` |
+| `confidence_lower_bound` | `NUMERIC(8,2)` | `NOT NULL` | 95% Confidence interval lower bound ($\max(0, \hat{y} - 1.96 \cdot \text{RMSE})$) |
+| `confidence_upper_bound` | `NUMERIC(8,2)` | `NOT NULL` | 95% Confidence interval upper bound ($\hat{y} + 1.96 \cdot \text{RMSE}$) |
+| `predicted_risk_level` | `VARCHAR(20)` | `NOT NULL` | Outbreak alert classification (`Severe`, `High`, `Moderate`, `Low`) |
+| `model_name` | `VARCHAR(50)` | `NOT NULL` | Algorithm identifier (`XGBoostRegressor` / `HistGradientBoostingRegressor`) |
+| `r2_score` | `NUMERIC(6,4)` | `NOT NULL` | Out-of-sample $R^2$ validation score |
+| `mae_score` | `NUMERIC(8,2)` | `NOT NULL` | Out-of-sample Mean Absolute Error |
+| `created_at` | `TIMESTAMP` | `NOT NULL` | Batch inference timestamp (`CURRENT_TIMESTAMP`) |

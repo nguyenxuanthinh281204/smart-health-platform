@@ -62,6 +62,7 @@ services:
       - ../dbt_transforms:/home/src/dbt_transforms
       - ../scripts:/home/src/scripts
       - ../bi_dashboard:/home/src/bi_dashboard
+      - ../models:/home/src/models
     networks:
       - smart_health_net
     depends_on:

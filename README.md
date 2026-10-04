@@ -21,6 +21,7 @@
 * **Population-Normalized Risk Metric:** Automated computation of **Incidence Rate per 100,000 population** to eliminate urban density distortion on choropleth heatmaps.
 * **Automated Risk Stratification Matrix:** Real-time multi-factor classification categorizing administrative entities into `Severe`, `High`, `Moderate`, and `Low` risk alerts.
 * **Conversational AI (Text-to-SQL Assistant):** Powered by Google Gemini 1.5 Flash and domain heuristic fallback, enabling clinicians and epidemiologists to query datamarts using natural language.
+* **Predictive Machine Learning Outbreak Forecasting:** Supervised ensemble regression (`HistGradientBoostingRegressor` / `XGBoostRegressor`) projecting dengue incident cases 4 weeks in advance ($y_{t+4}$) with $R^2 = 0.7184$, 95% confidence intervals, and automated early warning surge classifications.
 * **4-Layer Defense-in-Depth Security Sandbox:** Hardened SQL execution enforcing AST syntax blacklisting, read-only transactions, a 3000ms query timeout, database role least-privilege (`llm_agent`), and a hard row cap (`LIMIT 500`).
 
 ---
@@ -118,6 +119,9 @@ powershell -ExecutionPolicy Bypass -File scripts/test_sprint4.ps1
 
 # Sprint 5: Conversational AI (Text-to-SQL) & Security Sandbox
 powershell -ExecutionPolicy Bypass -File scripts/test_sprint5.ps1
+
+# Sprint 6: Predictive Machine Learning Outbreak Forecasting
+powershell -ExecutionPolicy Bypass -File scripts/test_sprint6.ps1
 ```
 
 ---

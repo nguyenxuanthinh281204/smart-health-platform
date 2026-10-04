@@ -93,3 +93,23 @@
   - Created 12-slide comprehensive defense deck with speaker notes and 5-minute live demonstration flow in `docs/PRESENTATION_AND_DEFENSE_DECK.md`.
 > **Definition of Done (DoD):** End-to-end platform functional from Ingestion $\to$ Warehouse $\to$ Dashboard $\to$ LLM Q&A; System packaged and defense-ready. (VERIFIED: All 12/12 Sprint 5 checks passed, query latency 11–22ms, SQL injection attacks safely blocked, 100% test pass rate across all 5 sprints).
 
+---
+
+### SPRINT 6: PREDICTIVE ANALYTICS & OUTBREAK FORECASTING (MACHINE LEARNING)
+- [x] **Task 6.1:** Construct ML feature engineering pipeline combining autoregressive clinical lags ($y_t, y_{t-1}, y_{t-2}, y_{t-3}$) with antecedent meteorological signals (Rainfall Lag 2W, Temp Lag 2W, Humidity, Seasonality) in `pipelines/train_predictive_model.py`.
+- [x] **Task 6.2:** Train and evaluate supervised ensemble regression model (`HistGradientBoostingRegressor` / `XGBoostRegressor`) targeting a 4-week forward outbreak horizon ($y_{t+4}$):
+  - Achieved $R^2 = 0.7184$ (71.8% variance explained on holdout validation set), $\text{MAE} = 91.50$, $\text{RMSE} = 181.68$.
+  - Serialized model artifact to `models/dengue_outbreak_forecast_4w.joblib` and metrics to `models/model_metrics.json`.
+- [x] **Task 6.3:** Materialize batch predictions to Data Warehouse table `gold.fact_outbreak_forecast_weekly`:
+  - 1,576 forecast records generated across all 8 administrative divisions (BD-10 to BD-60).
+  - Calculated 95% confidence intervals and automated risk classification (`Severe`, `High`, `Moderate`, `Low`).
+  - Enforced Least-Privilege RBAC: granted `SELECT` access to `bi_reader` and `llm_agent`.
+- [x] **Task 6.4:** Implement interactive Predictive Analytics UI in Streamlit (`bi_dashboard/app.py`):
+  - Created Tab 3 ("🔮 Predictive Analytics: 4-Week Outbreak Forecasting").
+  - Dual time-series chart showing Actual vs. 4-Week Ahead Predicted Cases with shaded 95% Confidence Interval band.
+  - Feature Importance horizontal bar chart detailing biological vector drivers (Rainfall Lag 2W, Temp Lag 2W).
+  - Regional 4-Week Forward Early Warning Table for upcoming surveillance horizons.
+- [x] **Task 6.5:** Integrate forecast table into Text-to-SQL AI Assistant (`pipelines/llm_text_to_sql.py`):
+  - Enables clinicians to ask questions like: *"Show 4-week ahead outbreak forecasts across all divisions"*.
+> **Definition of Done (DoD):** Supervised ML pipeline functional from training $\to$ validation $\to$ DW persistence $\to$ interactive forecast UI $\to$ Text-to-SQL integration. (VERIFIED: All 12/12 Sprint 6 checks passed, R² > 0.71, 100% test pass rate across all 6 sprints).
+

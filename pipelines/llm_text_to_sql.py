@@ -85,6 +85,17 @@ class LLMTextToSQLEngine:
        - temp_lag_2w (NUMERIC(5,2)): Mean temperature lagged by 2 weeks
        - risk_level (VARCHAR(20)): 'Low', 'Moderate', 'High', 'Severe'
        
+    4. Table: gold.fact_outbreak_forecast_weekly
+       - forecast_id (VARCHAR(60), PK): Unique forecast identifier
+       - location_key (VARCHAR(20), FK): References gold.dim_location(location_key)
+       - base_epi_week_key (INTEGER): Observation week from which forecast was generated
+       - forecast_epi_week_key (INTEGER): 4-week forward horizon epidemiological week
+       - predicted_cases_4w (INTEGER): Point prediction of dengue cases in 4 weeks
+       - predicted_incidence_rate_per_100k (NUMERIC(8,2)): Normalized predicted incidence
+       - confidence_lower_bound (NUMERIC(8,2)), confidence_upper_bound (NUMERIC(8,2)): 95% CI
+       - predicted_risk_level (VARCHAR(20)): 'Low', 'Moderate', 'High', 'Severe'
+       - model_name (VARCHAR(50)): 'HistGradientBoostingRegressor' or 'XGBoostRegressor'
+       
     RULES:
     - Only output valid SELECT queries. Never use DDL or DML.
     - Reference tables with the 'gold.' schema prefix.
@@ -271,6 +282,28 @@ GROUP BY l.climate_zone
 ORDER BY total_cases DESC;
             """.strip()
             explanation = "Aggregating epidemiological burden and environmental parameters categorized by climatic zones (Tropical Monsoon, Coastal, Highland)."
+            return sql, explanation
+
+        # Scenario 5: Machine Learning 4-Week Forward Outbreak Forecasting
+        if "forecast" in q or "predict" in q or "future" in q or "ahead" in q:
+            sql = """
+SELECT 
+    l.province_name_en,
+    fc.location_key,
+    fc.base_epi_week_key,
+    fc.forecast_epi_week_key,
+    fc.predicted_cases_4w,
+    fc.predicted_incidence_rate_per_100k,
+    fc.confidence_lower_bound,
+    fc.confidence_upper_bound,
+    fc.predicted_risk_level,
+    fc.model_name
+FROM gold.fact_outbreak_forecast_weekly fc
+JOIN gold.dim_location l ON fc.location_key = l.location_key
+WHERE fc.base_epi_week_key = (SELECT MAX(base_epi_week_key) FROM gold.fact_outbreak_forecast_weekly)
+ORDER BY fc.predicted_cases_4w DESC;
+            """.strip()
+            explanation = "Querying the 4-week forward dengue outbreak machine learning predictions and confidence bounds across all administrative divisions."
             return sql, explanation
 
         # Default Scenario: General Outbreak Overview

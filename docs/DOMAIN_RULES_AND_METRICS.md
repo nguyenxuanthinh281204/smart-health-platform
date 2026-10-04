@@ -90,3 +90,32 @@ The BI Dashboard and LLM Assistant must recommend specific operational intervent
 | **High** | **Orange (`#FB8C00`)** | Mobilize community larvicide application (Abate), inspect standing water containers in high-density wards, issue public localized health warnings. |
 | **Moderate** | **Yellow (`#FDD835`)** | Intensified vector surveillance, cleaning municipal drainage systems, pre-positioning diagnostic kits and IV fluids at district clinics. |
 | **Low** | **Green (`#43A047`)** | Routine epidemiological surveillance and public hygiene awareness campaigns. |
+
+---
+
+## 6. 4-WEEK FORWARD PREDICTIVE MACHINE LEARNING FORMULATION
+
+### 6.1. Objective & Target Horizon
+To provide public health directors with an actionable **4-week advance outbreak warning window**, the system trains a supervised ensemble regression model predicting future dengue incident cases $y_{i, t+4}$:
+$$\hat{y}_{i, t+4} = f\left(\mathbf{X}_{i, t}; \mathbf{\Theta}\right)$$
+where $i$ indexes the administrative division and $t$ denotes the current epidemiological observation week.
+
+### 6.2. Feature Matrix Specification ($\mathbf{X}_{i, t}$)
+1. **Autoregressive Clinical Lags:** Current week cases $y_{i, t}$, lag-1 week $y_{i, t-1}$, lag-2 week $y_{i, t-2}$, lag-3 week $y_{i, t-3}$.
+2. **Antecedent Meteorological Triggers:**
+   * $\text{rainfall\_lag\_2w}$ & $\text{rainfall\_lag\_4w}$ (Precipitation accumulation driving breeding sites).
+   * $\text{temp\_lag\_2w}$ (Temperature optimal range 26–32°C modulating viral extrinsic incubation).
+   * $\text{avg\_humidity\_pct}$ & $\text{avg\_temperature\_c}$ (Concurrent ambient indicators).
+3. **Cyclical Seasonality Signals:**
+   $$\text{sin\_week} = \sin\left(\frac{2\pi \cdot \text{epi\_week}}{52}\right), \quad \text{cos\_week} = \cos\left(\frac{2\pi \cdot \text{epi\_week}}{52}\right)$$
+4. **Demographic Normalization:** Regional baseline census population ($P_i$).
+
+### 6.3. Evaluation & Uncertainty Quantification
+* **Loss Function:** Mean Squared Error (MSE) with Huber / L1 regularization.
+* **Performance Metrics:** Out-of-sample Coefficient of Determination ($R^2$), Mean Absolute Error ($\text{MAE}$), and Root Mean Squared Error ($\text{RMSE}$).
+* **Empirical 95% Confidence Interval:**
+  $$\text{CI}_{95\%} = \left[\max\left(0, \hat{y} - 1.96 \cdot \text{RMSE}\right), \; \hat{y} + 1.96 \cdot \text{RMSE}\right]$$
+* **Projected Risk Level:**
+  $$\hat{\text{Incidence}}_{100k} = \frac{\hat{y}_{i, t+4}}{P_i} \times 100,000$$
+  Classified via the standard 4-tier alert threshold defined in Section 4.
+
