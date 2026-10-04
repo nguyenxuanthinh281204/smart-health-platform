@@ -394,7 +394,7 @@ if data_loaded:
                     yanchor="middle", y=0.5
                 )
             )
-            st.plotly_chart(fig_map, use_container_width=True)
+            st.plotly_chart(fig_map, use_container_width=True, key="bi_choropleth_map")
 
         with col_chart:
             st.markdown(f"#### 📈 Task 4.3: Time-Lag Dual-Axis Correlation ({selected_division})")
@@ -457,7 +457,7 @@ if data_loaded:
                 yaxis2=dict(title="Weekly Precipitation (mm)", showgrid=False, range=[0, df_timeseries["total_rainfall_mm"].max() * 2.5]),
                 hovermode="x unified"
             )
-            st.plotly_chart(fig_lag, use_container_width=True)
+            st.plotly_chart(fig_lag, use_container_width=True, key="bi_lag_correlation_chart")
 
         # --- SECTION 3: TASK 4.4 RISK ALERTING MATRIX & ACTION GUIDE ---
         st.markdown("---")
@@ -562,15 +562,15 @@ if data_loaded:
         preset_cols = st.columns(5)
         selected_preset = None
 
-        if preset_cols[0].button("🏆 Top 5 Divisions (2023)"):
+        if preset_cols[0].button("🏆 Top 5 Divisions (2023)", key="btn_top5"):
             selected_preset = "What are the top 5 divisions by total dengue cases in 2023?"
-        if preset_cols[1].button("🌧️ Rainfall Lag in Dhaka"):
+        if preset_cols[1].button("🌧️ Rainfall Lag in Dhaka", key="btn_rainfall"):
             selected_preset = "Show rainfall and dengue cases in Dhaka with time lags"
-        if preset_cols[2].button("🚨 Active High/Severe Alerts"):
+        if preset_cols[2].button("🚨 Active High/Severe Alerts", key="btn_alerts"):
             selected_preset = "Which regions have active high or severe risk alerts?"
-        if preset_cols[3].button("🌐 Climate Zone Comparison"):
+        if preset_cols[3].button("🌐 Climate Zone Comparison", key="btn_climate"):
             selected_preset = "Compare dengue incidence and rainfall across climate zones"
-        if preset_cols[4].button("⚠️ Test SQL Injection Defense"):
+        if preset_cols[4].button("⚠️ Test SQL Injection Defense", key="btn_injection"):
             selected_preset = "DROP TABLE gold.fact_disease_climate_weekly;"
 
         # Initialize session state chat history
@@ -627,7 +627,7 @@ if data_loaded:
                 })
 
         # Render conversation history
-        for msg in st.session_state.chat_history:
+        for msg_idx, msg in enumerate(st.session_state.chat_history):
             if msg["role"] == "user":
                 with st.chat_message("user", avatar="🧑‍⚕️"):
                     st.markdown(f"**{msg['content']}**")
@@ -698,7 +698,7 @@ if data_loaded:
                                     yaxis=dict(title="Surveillance Value", showgrid=True, gridcolor="#21262d"),
                                     legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center")
                                 )
-                                st.plotly_chart(fig_trend, use_container_width=True)
+                                st.plotly_chart(fig_trend, use_container_width=True, key=f"chat_trend_{msg_idx}")
 
                             # Scenario B: Administrative / Categorical comparison
                             elif ("province_name_en" in cols or "climate_zone" in cols) and len(df_res) > 1:
@@ -729,7 +729,7 @@ if data_loaded:
                                         xaxis=dict(showgrid=False),
                                         yaxis=dict(showgrid=True, gridcolor="#21262d")
                                     )
-                                    st.plotly_chart(fig_bar, use_container_width=True)
+                                    st.plotly_chart(fig_bar, use_container_width=True, key=f"chat_bar_{msg_idx}")
 
     # =========================================================================
     # TAB 3: DATA GOVERNANCE & SECURITY SANDBOX
