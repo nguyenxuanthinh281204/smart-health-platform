@@ -42,6 +42,8 @@ services:
     image: mageai/mageai:latest
     container_name: smart_health_mageai
     restart: unless-stopped
+    command: >
+      bash -c "nohup streamlit run /home/src/bi_dashboard/app.py --server.port=8501 --server.address=0.0.0.0 --server.headless=true > /tmp/streamlit.log 2>&1 & /app/run_app.sh"
     env_file:
       - ../.env
     environment:
