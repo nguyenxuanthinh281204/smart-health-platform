@@ -24,7 +24,7 @@
 - [x] **Task 7.1 - 7.4 (Sprint 7 Complete):**
   - **Design System Directive:** Strict compliance with `.agents/rules/modern_health_ui.md` — Dark Obsidian theme (`#0B0F19`), frosted glass cards (`backdrop-filter: blur(16px)`), modern typography (`Inter`, `Outfit`, `JetBrains Mono`), and high-visibility status badges.
   - **PyDeck 3D Spatial Map:** 3D extruded columns scaled by `incidence_rate_per_100k` on `Carto Dark` basemap with glassmorphic hover tooltips.
-  - **Three.js WebGL Real-Time 3D Digital Twin:** Interactive 3D vector transmission simulator featuring 8 regional nodes, orbital rings, animated transmission curves, particle physics swarms, and an interactive 3D object creation deck (spawning outbreak spores, rain vortexes, vector bursts).
+  - **Spline-Grade WebGL 3D Digital Twin:** Tactile physical materials (`MeshPhysicalMaterial` frosted glass, clearcoat 1.0), mouse parallax tilt, organic sinusoidal breathing, spring bounce spawning, 4 dynamic 3D entity types (Virus Blob, Bio Capsule, Data Torus, DNA Helix), interactive screen-projected 3D tooltips, Web Audio tactile chimes, and a floating glass dock with real-time shader switching.
   - **Browser Verification:** Verified end-to-end via automated browser subagent with WebGL execution recording and zero console errors.
 
 ---

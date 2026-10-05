@@ -125,11 +125,14 @@
 - [x] **Task 7.2:** Implement PyDeck 3D Spatial Outbreak Map with Column Extrusion:
   - Configured `pydeck.Deck` with `Carto Dark` basemap, 3D extruded columns scaled by `incidence_rate_per_100k`, and interactive dark-frosted glass HTML tooltips.
   - Synchronized Plotly Dark Glass Time-Lag Dynamics dual-axis surveillance chart.
-- [x] **Task 7.3:** Build Real-Time 3D Digital Twin & Vector Transmission Simulator (Three.js WebGL):
-  - Created a hardware-accelerated 3D canvas featuring 8 regional administrative division nodes in dynamic orbital planes.
-  - Animated 3D parabolic transmission arcs, particle physics vector swarms, and wireframe radar pulse grids.
-  - Built interactive 3D Object Spawner Deck allowing users to spawn real-time outbreak spores, trigger monsoon rain vortexes, and release vector bursts.
+- [x] **Task 7.3:** Build Real-Time 3D Digital Twin & Vector Transmission Simulator (Spline 3D Aesthetics & Three.js WebGL):
+  - Created a hardware-accelerated 3D canvas with Spline-grade `MeshPhysicalMaterial` (translucent frosted glass, clearcoat 1.0, transmission 0.82, ior 1.5).
+  - Implemented Spline mouse-follow parallax camera tilt with smooth spring lerp.
+  - Built organic sinusoidal breathing and pulsing for 8 regional nodes on a glossy circular reflective stage with concentric pulse rings.
+  - Implemented elastic spring spawn dynamics (squash & stretch bounce) for 4 dynamic 3D entity types: Virus Blob, Bio Capsule, Data Torus, and DNA Helix.
+  - Interactive 3D Screen Projection Tooltip (`project(camera)`) and Web Audio API synthesizer for tactile sci-fi chimes.
+  - Spline-style Floating Bottom Dock with real-time shader material switching (Frosted Glass, Cyber Hologram, Liquid Chrome, Bioluminescent), Shockwave repulsion, and Vortex.
 - [x] **Task 7.4:** End-to-End Automated Browser & Port 8501 Validation:
-  - Verified with `browser_subagent`: Dark Obsidian glassmorphic styling, PyDeck 3D map extrusion rendering, and interactive 3D spore generation (active node counter incremented 8 $\to$ 9 with 0 WebGL console errors).
-> **Definition of Done (DoD):** Modern Health UI/UX fully operational; PyDeck 3D elevation map rendering; Interactive Three.js 3D canvas responsive and verified in browser. (VERIFIED: All 12/12 Sprint 6 audit checks passed, Streamlit port 8501 responding HTTP 200, WebGL recording captured).
+  - Verified with `browser_subagent`: Dark Obsidian glassmorphic styling, PyDeck 3D map extrusion rendering, and interactive Spline 3D canvas testing (+ Virus Blob, + Bio Capsule, Shockwave, 0 console errors, 60 FPS).
+> **Definition of Done (DoD):** Modern Health UI/UX fully operational; PyDeck 3D elevation map rendering; Spline-grade interactive 3D WebGL experience responsive and verified in browser. (VERIFIED: All 12/12 Sprint 6 audit checks passed, Streamlit port 8501 responding HTTP 200, WebGL recording captured).
 
