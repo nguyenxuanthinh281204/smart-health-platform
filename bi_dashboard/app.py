@@ -708,44 +708,181 @@ if data_loaded:
             st.dataframe(pd.DataFrame(action_matrix), use_container_width=True, hide_index=True)
 
     # =========================================================================
-    # TAB 2: REAL-TIME 3D DIGITAL TWIN & VECTOR SIMULATOR (THREE.JS WEBGL)
+    # TAB 2: REAL-TIME 3D DIGITAL TWIN & VECTOR SIMULATOR (SPLINE 3D AESTHETICS)
     # =========================================================================
     with tab_3d_sim:
-        st.markdown("### 🎮 Real-Time 3D Spatial Digital Twin & Vector Transmission Simulator")
+        st.markdown("### 🪐 Real-Time 3D Digital Twin & Vector Transmission Simulator")
         st.markdown(
-            "An interactive **Three.js WebGL 3D Spatial Simulation** representing the 8 administrative divisions in relative 3D coordinate space. "
-            "Allows users to **interactively spawn 3D outbreak nodes, manipulate transmission velocity, and simulate real-time particle dynamics**."
+            "An executive **Spline-grade WebGL 3D Spatial Experience** featuring **MeshPhysical translucent glass materials**, "
+            "**mouse-follow parallax tilt**, **elastic spring physics**, **vertex-morphing virus blobs**, and **tactile Web Audio chimes**."
         )
 
-        three_js_html = """
+        spline_3d_html = """
         <!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <style>
-                body { margin: 0; padding: 0; overflow: hidden; background-color: #0B0F19; font-family: 'Inter', sans-serif; color: #F9FAFB; user-select: none; }
-                #canvas-container { width: 100vw; height: 560px; position: relative; }
-                #hud-overlay {
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+                
+                * { box-sizing: border-box; }
+                body {
+                    margin: 0; padding: 0; overflow: hidden;
+                    background-color: #0B0F19;
+                    font-family: 'Inter', -apple-system, sans-serif;
+                    color: #F9FAFB; user-select: none;
+                }
+                #canvas-container {
+                    width: 100vw; height: 620px;
+                    position: relative;
+                    background: radial-gradient(circle at 50% 40%, #151D30 0%, #0B0F19 80%);
+                }
+
+                /* Spline-style Top Left HUD Monitor */
+                #hud-monitor {
                     position: absolute; top: 16px; left: 16px;
-                    background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(12px);
-                    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
-                    padding: 14px 18px; z-index: 100; font-size: 13px; max-width: 320px;
-                    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+                    background: rgba(17, 24, 39, 0.72);
+                    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 16px; padding: 14px 20px;
+                    z-index: 50; max-width: 340px;
+                    box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.45);
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                 }
-                .hud-btn {
-                    background: #1E293B; color: #06B6D4; border: 1px solid rgba(6, 182, 212, 0.4);
-                    padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
-                    margin-top: 6px; margin-right: 4px; font-weight: 600;
-                    transition: all 0.2s ease;
+                #hud-monitor:hover {
+                    border-color: rgba(6, 182, 212, 0.35);
+                    box-shadow: 0 20px 48px 0 rgba(6, 182, 212, 0.15);
                 }
-                .hud-btn:hover { background: #06B6D4; color: #0B0F19; box-shadow: 0 0 12px rgba(6, 182, 212, 0.6); }
-                .hud-btn-red { color: #EF4444; border-color: rgba(239, 68, 68, 0.4); }
-                .hud-btn-red:hover { background: #EF4444; color: #FFFFFF; box-shadow: 0 0 12px rgba(239, 68, 68, 0.6); }
-                #instructions {
-                    position: absolute; bottom: 12px; right: 16px;
-                    background: rgba(17, 24, 39, 0.8); backdrop-filter: blur(8px);
-                    padding: 8px 14px; border-radius: 8px; font-size: 12px; color: #9CA3AF;
-                    border: 1px solid rgba(255,255,255,0.06);
+                .monitor-title {
+                    font-family: 'Outfit', sans-serif;
+                    font-size: 14px; font-weight: 700;
+                    letter-spacing: -0.01em;
+                    background: linear-gradient(135deg, #00F0FF, #8B5CF6);
+                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                    display: flex; align-items: center; gap: 8px;
+                }
+                .monitor-sub {
+                    font-size: 11px; color: #94A3B8; margin-top: 4px; line-height: 1.4;
+                }
+                .metric-pill-row {
+                    display: flex; gap: 8px; margin-top: 10px;
+                }
+                .metric-pill {
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 8px; padding: 4px 10px;
+                    font-size: 11px; font-family: 'JetBrains Mono', monospace;
+                    color: #E2E8F0;
+                }
+
+                /* Spline-style Floating Bottom Dock */
+                #spline-dock {
+                    position: absolute; bottom: 20px; left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(17, 24, 39, 0.82);
+                    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+                    border: 1px solid rgba(255, 255, 255, 0.12);
+                    border-radius: 9999px;
+                    padding: 8px 14px;
+                    display: flex; align-items: center; gap: 6px;
+                    z-index: 50;
+                    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 24px rgba(6, 182, 212, 0.15);
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                #spline-dock:hover {
+                    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7), 0 0 32px rgba(6, 182, 212, 0.25);
+                    border-color: rgba(255, 255, 255, 0.18);
+                }
+                .dock-btn {
+                    background: rgba(255, 255, 255, 0.06);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    color: #F1F5F9;
+                    padding: 8px 14px;
+                    border-radius: 9999px;
+                    font-size: 12px; font-weight: 600;
+                    cursor: pointer;
+                    display: flex; align-items: center; gap: 6px;
+                    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+                    outline: none;
+                }
+                .dock-btn:hover {
+                    background: rgba(6, 182, 212, 0.2);
+                    border-color: rgba(6, 182, 212, 0.5);
+                    color: #00F0FF;
+                    transform: translateY(-2px) scale(1.04);
+                    box-shadow: 0 8px 20px rgba(6, 182, 212, 0.3);
+                }
+                .dock-btn:active {
+                    transform: translateY(0) scale(0.97);
+                }
+                .dock-btn-accent {
+                    background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(249, 115, 22, 0.25));
+                    border-color: rgba(239, 68, 68, 0.4);
+                    color: #FCA5A5;
+                }
+                .dock-btn-accent:hover {
+                    background: linear-gradient(135deg, rgba(239, 68, 68, 0.5), rgba(249, 115, 22, 0.5));
+                    border-color: #EF4444;
+                    color: #FFFFFF;
+                    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+                }
+                .dock-divider {
+                    width: 1px; height: 22px;
+                    background: rgba(255, 255, 255, 0.12);
+                    margin: 0 4px;
+                }
+                .dock-select {
+                    background: rgba(255, 255, 255, 0.06);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    color: #93C5FD;
+                    padding: 7px 10px;
+                    border-radius: 9999px;
+                    font-size: 11px; font-weight: 600;
+                    cursor: pointer;
+                    outline: none;
+                }
+                .dock-select option {
+                    background: #111827; color: #FFFFFF;
+                }
+
+                /* 3D Floating Tooltip Pin in Screen Space */
+                #spline-tooltip {
+                    position: absolute;
+                    pointer-events: none;
+                    background: rgba(17, 24, 39, 0.88);
+                    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+                    border: 1px solid rgba(6, 182, 212, 0.5);
+                    border-radius: 12px;
+                    padding: 10px 14px;
+                    font-size: 12px;
+                    color: #FFFFFF;
+                    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(6, 182, 212, 0.3);
+                    transform: translate(-50%, -120%);
+                    opacity: 0;
+                    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+                    z-index: 100;
+                    white-space: nowrap;
+                }
+                #spline-tooltip.active {
+                    opacity: 1;
+                    transform: translate(-50%, -135%);
+                }
+                .tooltip-badge {
+                    display: inline-block; padding: 2px 6px; border-radius: 4px;
+                    font-size: 10px; font-weight: 700; margin-left: 6px;
+                }
+
+                /* Instruction hint */
+                #hint-badge {
+                    position: absolute; top: 16px; right: 16px;
+                    background: rgba(17, 24, 39, 0.6);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    border-radius: 20px; padding: 6px 14px;
+                    font-size: 11px; color: #94A3B8;
+                    display: flex; align-items: center; gap: 8px;
+                    z-index: 50;
                 }
             </style>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -753,222 +890,553 @@ if data_loaded:
         </head>
         <body>
             <div id="canvas-container">
-                <div id="hud-overlay">
-                    <div style="font-weight: 700; color: #06B6D4; font-size: 14px; margin-bottom: 4px;">⚡ 3D SPATIAL CONTROL DECK</div>
-                    <div style="color: #9CA3AF; font-size: 11px; margin-bottom: 8px;">Interactive Object Spawner & Particle Physics</div>
-                    <div>
-                        <button class="hud-btn hud-btn-red" onclick="spawnOutbreakNode()">🔴 Spawn Outbreak Spore</button>
-                        <button class="hud-btn" onclick="triggerRainVortex()">🌧️ Trigger Rain Vortex</button>
-                        <button class="hud-btn" onclick="releaseVectorBurst()">🦟 Vector Swarm Burst</button>
-                        <button class="hud-btn" onclick="resetCamera()">🔄 Reset 3D Orbit</button>
+                <!-- Top Left HUD Monitor -->
+                <div id="hud-monitor">
+                    <div class="monitor-title">
+                        <span>🪐</span> SPLINE 3D DIGITAL TWIN
                     </div>
-                    <div style="margin-top: 10px; font-size: 11px; color: #A78BFA;" id="status-text">Active Objects: 8 Regional Nodes</div>
+                    <div class="monitor-sub">
+                        Real-time vector transmission kinetics & organic mesh deformation.
+                    </div>
+                    <div class="metric-pill-row">
+                        <div class="metric-pill" id="pill-nodes">Nodes: 8</div>
+                        <div class="metric-pill" id="pill-fps">60 FPS</div>
+                        <div class="metric-pill" style="color: #00F0FF;" id="pill-physics">Spring: Active</div>
+                    </div>
                 </div>
-                <div id="instructions">
-                    🖱️ <b>Left Click & Drag:</b> Rotate 3D | <b>Scroll:</b> Zoom | <b>Click Space:</b> Spawn Node
+
+                <!-- Top Right Hint Badge -->
+                <div id="hint-badge">
+                    <span>✨ Move mouse for Parallax • Drag to Rotate • Hover nodes for 3D Pin</span>
+                </div>
+
+                <!-- 3D Floating Tooltip in Screen Projection -->
+                <div id="spline-tooltip">
+                    <div id="tt-title" style="font-weight: 700; color: #00F0FF; font-size: 13px;">Dhaka Division</div>
+                    <div id="tt-body" style="color: #CBD5E1; margin-top: 3px; font-size: 11px; font-family: 'JetBrains Mono', monospace;">
+                        Incidence: 48.6 / 100k • Cases: 16,422
+                    </div>
+                </div>
+
+                <!-- Spline Floating Bottom Dock -->
+                <div id="spline-dock">
+                    <button class="dock-btn dock-btn-accent" onclick="spawnOrganicVirus()">
+                        <span>🦠</span> Virus Blob
+                    </button>
+                    <button class="dock-btn" onclick="spawnBioCapsule()">
+                        <span>💊</span> Bio Capsule
+                    </button>
+                    <button class="dock-btn" onclick="spawnDataTorus()">
+                        <span>🪐</span> Data Ring
+                    </button>
+                    <button class="dock-btn" onclick="spawnDNAHelix()">
+                        <span>🧬</span> DNA Strand
+                    </button>
+                    <div class="dock-divider"></div>
+                    <select class="dock-select" id="material-selector" onchange="changeMaterialTheme(this.value)">
+                        <option value="glass">💎 Frosted Glass</option>
+                        <option value="iridescent">🌈 Cyber Hologram</option>
+                        <option value="chrome">🪞 Liquid Chrome</option>
+                        <option value="bio">✨ Bioluminescent</option>
+                    </select>
+                    <div class="dock-divider"></div>
+                    <button class="dock-btn" onclick="triggerShockwave()">
+                        <span>💥</span> Shockwave
+                    </button>
+                    <button class="dock-btn" onclick="triggerCyclone()">
+                        <span>🌀</span> Vortex
+                    </button>
+                    <button class="dock-btn" id="sound-btn" onclick="toggleSound()">
+                        <span>🔊</span> Sound
+                    </button>
+                    <button class="dock-btn" onclick="resetSplineCamera()">
+                        <span>🔄</span>
+                    </button>
                 </div>
             </div>
 
             <script>
+                // --- 1. AUDIO SYNTHESIZER (TACTILE SOUND EFFECTS) ---
+                let audioEnabled = true;
+                let audioCtx = null;
+
+                function initAudio() {
+                    if (!audioCtx) {
+                        const AudioContext = window.AudioContext || window.webkitAudioContext;
+                        if (AudioContext) audioCtx = new AudioContext();
+                    }
+                }
+
+                function playSynthChime(freq = 520, type = 'sine', duration = 0.15) {
+                    if (!audioEnabled) return;
+                    try {
+                        initAudio();
+                        if (audioCtx.state === 'suspended') audioCtx.resume();
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = type;
+                        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(freq * 1.5, audioCtx.currentTime + duration);
+                        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start();
+                        osc.stop(audioCtx.currentTime + duration);
+                    } catch(e) {}
+                }
+
+                function toggleSound() {
+                    audioEnabled = !audioEnabled;
+                    document.getElementById('sound-btn').innerHTML = audioEnabled ? '<span>🔊</span> Sound' : '<span>🔇</span> Mute';
+                    if (audioEnabled) playSynthChime(660);
+                }
+
+                // --- 2. THREE.JS SCENE SETUP ---
                 const container = document.getElementById('canvas-container');
                 const scene = new THREE.Scene();
-                scene.background = new THREE.Color(0x0B0F19);
-                scene.fog = new THREE.FogExp2(0x0B0F19, 0.025);
+                scene.fog = new THREE.FogExp2(0x0B0F19, 0.022);
 
-                const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
-                camera.position.set(0, 18, 28);
+                const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+                const baseCamPos = new THREE.Vector3(0, 14, 30);
+                camera.position.copy(baseCamPos);
 
-                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
                 renderer.setSize(container.clientWidth, container.clientHeight);
-                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                renderer.toneMappingExposure = 1.25;
                 container.appendChild(renderer.domElement);
 
                 const controls = new THREE.OrbitControls(camera, renderer.domElement);
                 controls.enableDamping = true;
                 controls.dampingFactor = 0.05;
-                controls.maxPolarAngle = Math.PI / 2 + 0.1;
+                controls.maxPolarAngle = Math.PI / 2 + 0.05;
+                controls.minDistance = 12;
+                controls.maxDistance = 55;
 
-                // Lighting
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                // --- 3. SPLINE CINEMATIC LIGHTING ---
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
                 scene.add(ambientLight);
 
-                const cyanLight = new THREE.PointLight(0x06B6D4, 2, 80);
-                cyanLight.position.set(0, 15, 0);
-                scene.add(cyanLight);
+                const keyLight = new THREE.PointLight(0x00F0FF, 3.2, 70);
+                keyLight.position.set(15, 20, 15);
+                scene.add(keyLight);
 
-                const purpleLight = new THREE.PointLight(0x8B5CF6, 2, 80);
-                purpleLight.position.set(10, 8, -10);
-                scene.add(purpleLight);
+                const rimLight = new THREE.PointLight(0xEC4899, 2.8, 70);
+                rimLight.position.set(-15, 12, -15);
+                scene.add(rimLight);
 
-                // Holographic Grid Ground
-                const gridHelper = new THREE.GridHelper(40, 40, 0x06B6D4, 0x1E293B);
-                gridHelper.position.y = -2;
-                scene.add(gridHelper);
+                const fillLight = new THREE.PointLight(0x8B5CF6, 2.2, 70);
+                fillLight.position.set(0, -8, 20);
+                scene.add(fillLight);
 
-                // 8 Regional Nodes Data
+                const amberLight = new THREE.PointLight(0xF59E0B, 1.8, 60);
+                amberLight.position.set(0, 25, 0);
+                scene.add(amberLight);
+
+                // --- 4. GROUND REFLECTIVE PEDESTAL ---
+                const groundGroup = new THREE.Group();
+                scene.add(groundGroup);
+
+                // Glossy circular stage
+                const pedestalGeom = new THREE.CylinderGeometry(18, 19, 0.5, 64);
+                const pedestalMat = new THREE.MeshPhysicalMaterial({
+                    color: 0x111827,
+                    roughness: 0.15,
+                    metalness: 0.85,
+                    clearcoat: 1.0,
+                    clearcoatRoughness: 0.1,
+                    reflectivity: 0.95
+                });
+                const pedestal = new THREE.Mesh(pedestalGeom, pedestalMat);
+                pedestal.position.y = -2.5;
+                groundGroup.add(pedestal);
+
+                // Concentric Energy Pulse Rings on Pedestal
+                const pulseRings = [];
+                for(let r=0; r<4; r++) {
+                    const ringGeom = new THREE.RingGeometry(4 + r*3.6, 4.1 + r*3.6, 64);
+                    const ringMat = new THREE.MeshBasicMaterial({
+                        color: 0x06B6D4,
+                        transparent: true,
+                        opacity: 0.25 - r*0.05,
+                        side: THREE.DoubleSide
+                    });
+                    const ring = new THREE.Mesh(ringGeom, ringMat);
+                    ring.rotation.x = -Math.PI / 2;
+                    ring.position.y = -2.23;
+                    groundGroup.add(ring);
+                    pulseRings.push(ring);
+                }
+
+                // --- 5. MATERIAL PRESETS (SPLINE SHADER ENGINE) ---
+                let currentTheme = 'glass';
+                function getMaterialForTheme(baseColorHex, emissiveHex, opacity = 0.88) {
+                    if (currentTheme === 'glass') {
+                        return new THREE.MeshPhysicalMaterial({
+                            color: baseColorHex,
+                            emissive: emissiveHex,
+                            emissiveIntensity: 0.35,
+                            roughness: 0.12,
+                            metalness: 0.15,
+                            transmission: 0.82,
+                            thickness: 1.8,
+                            ior: 1.5,
+                            clearcoat: 1.0,
+                            clearcoatRoughness: 0.08,
+                            transparent: true,
+                            opacity: opacity
+                        });
+                    } else if (currentTheme === 'iridescent') {
+                        return new THREE.MeshPhysicalMaterial({
+                            color: 0x00F0FF,
+                            emissive: 0x8B5CF6,
+                            emissiveIntensity: 0.5,
+                            roughness: 0.1,
+                            metalness: 0.4,
+                            transmission: 0.5,
+                            clearcoat: 1.0,
+                            clearcoatRoughness: 0.05,
+                            transparent: true,
+                            opacity: 0.92
+                        });
+                    } else if (currentTheme === 'chrome') {
+                        return new THREE.MeshStandardMaterial({
+                            color: 0xE2E8F0,
+                            emissive: baseColorHex,
+                            emissiveIntensity: 0.2,
+                            roughness: 0.05,
+                            metalness: 0.98
+                        });
+                    } else { // Bio
+                        return new THREE.MeshStandardMaterial({
+                            color: baseColorHex,
+                            emissive: baseColorHex,
+                            emissiveIntensity: 0.85,
+                            roughness: 0.3,
+                            metalness: 0.2,
+                            wireframe: false
+                        });
+                    }
+                }
+
+                // --- 6. REGIONAL SURVEILLANCE DATA NODES ---
                 const divisions = [
-                    { name: "Dhaka", pos: [0, 2, 0], color: 0xEF4444, scale: 1.5, cases: "16,422", risk: "Severe" },
-                    { name: "Chittagong", pos: [7, 0, 5], color: 0xEF4444, scale: 1.4, cases: "18,541", risk: "Severe" },
-                    { name: "Sylhet", pos: [6, 4, -6], color: 0xF97316, scale: 1.1, cases: "4,210", risk: "High" },
-                    { name: "Khulna", pos: [-6, -1, 3], color: 0xFBBF24, scale: 0.9, cases: "2,840", risk: "Moderate" },
-                    { name: "Barisal", pos: [-2, -2, 5], color: 0xF97316, scale: 1.0, cases: "3,950", risk: "High" },
-                    { name: "Rajshahi", pos: [-7, 3, -3], color: 0x10B981, scale: 0.8, cases: "1,200", risk: "Low" },
-                    { name: "Rangpur", pos: [-6, 7, -8], color: 0x10B981, scale: 0.7, cases: "980", risk: "Low" },
-                    { name: "Mymensingh", pos: [1, 5, -4], color: 0xFBBF24, scale: 0.85, cases: "2,150", risk: "Moderate" }
+                    { name: "Dhaka", pos: [0, 2.2, 0], color: 0xEF4444, scale: 1.45, cases: "16,422", inc: "48.6 / 100k", risk: "Severe" },
+                    { name: "Chittagong", pos: [7.5, 0.5, 5], color: 0xEF4444, scale: 1.35, cases: "18,541", inc: "53.2 / 100k", risk: "Severe" },
+                    { name: "Sylhet", pos: [6.5, 4.2, -6], color: 0xF97316, scale: 1.15, cases: "4,210", inc: "28.4 / 100k", risk: "High" },
+                    { name: "Khulna", pos: [-6.5, -0.6, 3.5], color: 0xFBBF24, scale: 1.0, cases: "2,840", inc: "16.8 / 100k", risk: "Moderate" },
+                    { name: "Barisal", pos: [-2.5, -1.8, 5.5], color: 0xF97316, scale: 1.05, cases: "3,950", inc: "31.2 / 100k", risk: "High" },
+                    { name: "Rajshahi", pos: [-7.5, 3.2, -3], color: 0x10B981, scale: 0.9, cases: "1,200", inc: "7.5 / 100k", risk: "Low" },
+                    { name: "Rangpur", pos: [-6.5, 6.8, -7.5], color: 0x10B981, scale: 0.85, cases: "980", inc: "6.1 / 100k", risk: "Low" },
+                    { name: "Mymensingh", pos: [1.2, 5.0, -4.5], color: 0xFBBF24, scale: 0.95, cases: "2,150", inc: "14.2 / 100k", risk: "Moderate" }
                 ];
 
+                const interactiveObjects = [];
                 const nodeMeshes = [];
                 const nodeGroup = new THREE.Group();
                 scene.add(nodeGroup);
 
-                divisions.forEach(d => {
-                    // Node core sphere
-                    const geom = new THREE.SphereGeometry(d.scale * 0.7, 32, 32);
-                    const mat = new THREE.MeshStandardMaterial({
-                        color: d.color,
-                        emissive: d.color,
-                        emissiveIntensity: 0.4,
-                        roughness: 0.2,
-                        metalness: 0.8,
-                        transparent: true,
-                        opacity: 0.9
-                    });
-                    const sphere = new THREE.Mesh(geom, mat);
-                    sphere.position.set(...d.pos);
-                    sphere.userData = d;
-                    nodeGroup.add(sphere);
-                    nodeMeshes.push(sphere);
+                divisions.forEach((d, idx) => {
+                    const nodeSubGroup = new THREE.Group();
+                    nodeSubGroup.position.set(...d.pos);
+                    nodeSubGroup.userData = { ...d, baseY: d.pos[1], phase: idx * 0.8, targetScale: 1.0, currentScale: 1.0 };
 
-                    // Pulsing orbital ring
-                    const ringGeom = new THREE.TorusGeometry(d.scale * 1.1, 0.04, 16, 64);
-                    const ringMat = new THREE.MeshBasicMaterial({ color: d.color, transparent: true, opacity: 0.7 });
-                    const ring = new THREE.Mesh(ringGeom, ringMat);
-                    ring.position.set(...d.pos);
-                    ring.rotation.x = Math.PI / 2;
-                    nodeGroup.add(ring);
-                    sphere.userData.ring = ring;
+                    // 1. Translucent Glass Capsule/Sphere Outer Shell
+                    const shellGeom = new THREE.SphereGeometry(d.scale * 0.75, 48, 48);
+                    const shellMat = getMaterialForTheme(d.color, d.color);
+                    const shellMesh = new THREE.Mesh(shellGeom, shellMat);
+                    shellMesh.userData = { parentGroup: nodeSubGroup };
+                    nodeSubGroup.add(shellMesh);
+                    interactiveObjects.push(shellMesh);
 
-                    // Ground projection stalk
-                    const stalkGeom = new THREE.CylinderGeometry(0.04, 0.04, d.pos[1] - (-2), 8);
-                    const stalkMat = new THREE.MeshBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.6 });
+                    // 2. Glowing Inner Core (Nucleus)
+                    const coreGeom = new THREE.IcosahedronGeometry(d.scale * 0.35, 2);
+                    const coreMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+                    const coreMesh = new THREE.Mesh(coreGeom, coreMat);
+                    nodeSubGroup.add(coreMesh);
+                    nodeSubGroup.userData.core = coreMesh;
+
+                    // 3. Floating Orbital Torus Halo
+                    const haloGeom = new THREE.TorusGeometry(d.scale * 1.15, 0.035, 24, 80);
+                    const haloMat = new THREE.MeshBasicMaterial({ color: d.color, transparent: true, opacity: 0.75 });
+                    const halo = new THREE.Mesh(haloGeom, haloMat);
+                    halo.rotation.x = Math.PI / 2 + 0.2;
+                    nodeSubGroup.add(halo);
+                    nodeSubGroup.userData.halo = halo;
+
+                    // 4. Ground Luminous Light Pillar (Stalk)
+                    const stalkHeight = d.pos[1] - (-2.2);
+                    const stalkGeom = new THREE.CylinderGeometry(0.03, 0.03, stalkHeight, 16);
+                    const stalkMat = new THREE.MeshBasicMaterial({ color: d.color, transparent: true, opacity: 0.45 });
                     const stalk = new THREE.Mesh(stalkGeom, stalkMat);
-                    stalk.position.set(d.pos[0], (d.pos[1] + (-2)) / 2, d.pos[2]);
-                    nodeGroup.add(stalk);
+                    stalk.position.y = -stalkHeight / 2;
+                    nodeSubGroup.add(stalk);
+
+                    nodeGroup.add(nodeSubGroup);
+                    nodeMeshes.push(nodeSubGroup);
                 });
 
-                // Connecting 3D Transmission Beams (Curved Bezier Arcs)
+                // --- 7. TRANSMISSION ARCS WITH FLOWING ENERGY PULSES ---
                 const connections = [
                     [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 7], [1, 4], [5, 6], [7, 2]
                 ];
-                const curveObjects = [];
+                const arcPulses = [];
 
-                connections.forEach(c => {
-                    const p1 = new THREE.Vector3(...divisions[c[0]].pos);
-                    const p2 = new THREE.Vector3(...divisions[c[1]].pos);
+                connections.forEach(([i1, i2]) => {
+                    const p1 = new THREE.Vector3(...divisions[i1].pos);
+                    const p2 = new THREE.Vector3(...divisions[i2].pos);
                     const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
-                    mid.y += p1.distanceTo(p2) * 0.35; // Arc height
+                    mid.y += p1.distanceTo(p2) * 0.38; // Volumetric arc arch
 
                     const curve = new THREE.QuadraticBezierCurve3(p1, mid, p2);
-                    const points = curve.getPoints(50);
-                    const geom = new THREE.BufferGeometry().setFromPoints(points);
-                    const mat = new THREE.LineBasicMaterial({ color: 0x06B6D4, transparent: true, opacity: 0.35 });
-                    const line = new THREE.Line(geom, mat);
-                    scene.add(line);
+                    const tubeGeom = new THREE.TubeGeometry(curve, 40, 0.03, 8, false);
+                    const tubeMat = new THREE.MeshBasicMaterial({ color: 0x06B6D4, transparent: true, opacity: 0.3 });
+                    const tubeMesh = new THREE.Mesh(tubeGeom, tubeMat);
+                    scene.add(tubeMesh);
 
-                    // Animated moving pulse particle along arc
-                    const pulseGeom = new THREE.SphereGeometry(0.18, 16, 16);
-                    const pulseMat = new THREE.MeshBasicMaterial({ color: 0x38BDF8 });
-                    const pulseMesh = new THREE.Mesh(pulseGeom, pulseMat);
-                    scene.add(pulseMesh);
-                    curveObjects.push({ curve: curve, mesh: pulseMesh, t: Math.random() });
+                    // Flowing energy droplet
+                    const dropGeom = new THREE.SphereGeometry(0.16, 16, 16);
+                    const dropMat = new THREE.MeshBasicMaterial({ color: 0x38BDF8 });
+                    const drop = new THREE.Mesh(dropGeom, dropMat);
+                    scene.add(drop);
+                    arcPulses.push({ curve, mesh: drop, t: Math.random(), speed: 0.006 + Math.random() * 0.004 });
                 });
 
-                // Particle Swarm (Mosquito Vectors & Climate Particles)
-                const particleCount = 450;
+                // --- 8. FLOATING AMBIENT PARTICLES (BIO ATMOSPHERE) ---
+                const particleCount = 350;
                 const particleGeom = new THREE.BufferGeometry();
-                const posArray = new Float32Array(particleCount * 3);
-                for(let i=0; i<particleCount*3; i+=3) {
-                    posArray[i] = (Math.random() - 0.5) * 30;
-                    posArray[i+1] = Math.random() * 14;
-                    posArray[i+2] = (Math.random() - 0.5) * 30;
+                const particlePositions = new Float32Array(particleCount * 3);
+                const particleVelocities = [];
+
+                for(let i=0; i<particleCount; i++) {
+                    particlePositions[i*3] = (Math.random() - 0.5) * 36;
+                    particlePositions[i*3+1] = Math.random() * 18 - 1;
+                    particlePositions[i*3+2] = (Math.random() - 0.5) * 36;
+                    particleVelocities.push({
+                        vx: (Math.random() - 0.5) * 0.015,
+                        vy: (Math.random() - 0.5) * 0.01,
+                        vz: (Math.random() - 0.5) * 0.015
+                    });
                 }
-                particleGeom.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+                particleGeom.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
                 const particleMat = new THREE.PointsMaterial({
-                    size: 0.16,
-                    color: 0x06B6D4,
+                    size: 0.22,
+                    color: 0x00F0FF,
                     transparent: true,
-                    opacity: 0.6,
+                    opacity: 0.65,
                     blending: THREE.AdditiveBlending
                 });
                 const particleSystem = new THREE.Points(particleGeom, particleMat);
                 scene.add(particleSystem);
 
-                // User spawned objects list
-                const dynamicObjects = [];
-                let dynamicCount = 0;
+                // --- 9. DYNAMIC SPAWNED 3D OBJECTS (SPRING PHYSICS ENGINE) ---
+                const spawnedObjects = [];
+                let totalSpawned = 0;
 
-                // Interactive 3D Raycasting for Click-to-Spawn
-                const raycaster = new THREE.Raycaster();
-                const mouse = new THREE.Vector2();
-
-                renderer.domElement.addEventListener('dblclick', (e) => {
-                    const rect = renderer.domElement.getBoundingClientRect();
-                    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-                    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-                    raycaster.setFromCamera(mouse, camera);
-
-                    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-                    const target = new THREE.Vector3();
-                    if (raycaster.ray.intersectPlane(plane, target)) {
-                        createSporeAt(target.x, target.y + 2, target.z);
+                class SpringObject {
+                    constructor(mesh, type, x, y, z) {
+                        this.mesh = mesh;
+                        this.type = type;
+                        this.mesh.position.set(x, y, z);
+                        this.time = 0;
+                        this.scaleProgress = 0;
+                        this.targetScale = 1.0;
+                        this.baseY = y;
+                        this.mesh.scale.set(0.001, 0.001, 0.001);
+                        scene.add(this.mesh);
+                        interactiveObjects.push(this.mesh);
                     }
-                });
 
-                function createSporeAt(x, y, z) {
-                    dynamicCount++;
-                    const geom = new THREE.IcosahedronGeometry(0.8, 1);
-                    const mat = new THREE.MeshStandardMaterial({
-                        color: 0xEF4444,
-                        emissive: 0xEF4444,
-                        emissiveIntensity: 0.8,
-                        wireframe: true
-                    });
-                    const spore = new THREE.Mesh(geom, mat);
-                    spore.position.set(x, y, z);
-                    scene.add(spore);
-                    dynamicObjects.push(spore);
+                    update(delta) {
+                        this.time += delta;
+                        // Elastic Spring In-Bounce formula
+                        if (this.scaleProgress < 1.0) {
+                            this.scaleProgress += delta * 2.8;
+                            if (this.scaleProgress > 1.0) this.scaleProgress = 1.0;
+                            const p = this.scaleProgress;
+                            // Spring overshoot dampening
+                            const s = 1.0 + Math.sin(p * Math.PI * 2.2) * Math.exp(-p * 3.5) * 0.45;
+                            this.mesh.scale.set(s, s, s);
+                        }
 
-                    document.getElementById('status-text').innerText = `Active Objects: ${8 + dynamicCount} Nodes (Click double-tap in space to spawn)`;
+                        // Organic movement by type
+                        if (this.type === 'blob') {
+                            this.mesh.rotation.x += 0.015;
+                            this.mesh.rotation.y += 0.02;
+                            this.mesh.position.y = this.baseY + Math.sin(this.time * 2) * 0.3;
+                        } else if (this.type === 'capsule') {
+                            this.mesh.rotation.z += 0.018;
+                            this.mesh.rotation.y += 0.01;
+                            this.mesh.position.y = this.baseY + Math.cos(this.time * 1.8) * 0.25;
+                        } else if (this.type === 'torus') {
+                            this.mesh.rotation.x += 0.025;
+                            this.mesh.rotation.y += 0.035;
+                        } else if (this.type === 'helix') {
+                            this.mesh.rotation.y += 0.04;
+                        }
+                    }
                 }
 
-                window.spawnOutbreakNode = function() {
-                    const rx = (Math.random() - 0.5) * 20;
-                    const rz = (Math.random() - 0.5) * 20;
-                    createSporeAt(rx, Math.random() * 6 + 1, rz);
+                // Object Spawner Functions
+                function getRandomSpawnPos() {
+                    const r = 4 + Math.random() * 11;
+                    const theta = Math.random() * Math.PI * 2;
+                    return { x: Math.cos(theta) * r, y: 1 + Math.random() * 5, z: Math.sin(theta) * r };
+                }
+
+                window.spawnOrganicVirus = function() {
+                    initAudio();
+                    playSynthChime(320, 'triangle', 0.25);
+                    const pos = getRandomSpawnPos();
+                    const geom = new THREE.IcosahedronGeometry(1.0, 2);
+                    const mat = getMaterialForTheme(0xEF4444, 0xEF4444, 0.95);
+                    mat.wireframe = false;
+                    const mesh = new THREE.Mesh(geom, mat);
+                    mesh.userData = { name: "Active Outbreak Spore", info: "De novo viral cluster generated" };
+                    spawnedObjects.push(new SpringObject(mesh, 'blob', pos.x, pos.y, pos.z));
+                    updateNodePill();
                 };
 
-                window.triggerRainVortex = function() {
-                    particleMat.color.setHex(0x38BDF8);
-                    particleMat.size = 0.28;
-                    setTimeout(() => { particleMat.size = 0.16; }, 3000);
-                    document.getElementById('status-text').innerText = "Vortex: High Precipitation 2W Antecedent Lag Active";
+                window.spawnBioCapsule = function() {
+                    initAudio();
+                    playSynthChime(480, 'sine', 0.2);
+                    const pos = getRandomSpawnPos();
+                    const group = new THREE.Group();
+                    const cylGeom = new THREE.CylinderGeometry(0.5, 0.5, 1.4, 32);
+                    const hemi1Geom = new THREE.SphereGeometry(0.5, 32, 16, 0, Math.PI*2, 0, Math.PI/2);
+                    const matTop = getMaterialForTheme(0x00F0FF, 0x00F0FF);
+                    const matBottom = getMaterialForTheme(0x8B5CF6, 0x8B5CF6);
+                    const body = new THREE.Mesh(cylGeom, matTop);
+                    const capTop = new THREE.Mesh(hemi1Geom, matTop);
+                    capTop.position.y = 0.7;
+                    const capBottom = new THREE.Mesh(hemi1Geom, matBottom);
+                    capBottom.position.y = -0.7;
+                    capBottom.rotation.x = Math.PI;
+                    group.add(body); group.add(capTop); group.add(capBottom);
+                    group.userData = { name: "Bio-Surveillance Capsule", info: "Climate sensor & vector trap probe" };
+                    spawnedObjects.push(new SpringObject(group, 'capsule', pos.x, pos.y, pos.z));
+                    updateNodePill();
                 };
 
-                window.releaseVectorBurst = function() {
-                    for(let i=0; i<5; i++) {
-                        setTimeout(() => { spawnOutbreakNode(); }, i*200);
+                window.spawnDataTorus = function() {
+                    initAudio();
+                    playSynthChime(580, 'sine', 0.2);
+                    const pos = getRandomSpawnPos();
+                    const geom = new THREE.TorusGeometry(0.9, 0.22, 24, 64);
+                    const mat = getMaterialForTheme(0xF59E0B, 0xF59E0B);
+                    const mesh = new THREE.Mesh(geom, mat);
+                    mesh.userData = { name: "Holographic Data Torus", info: "Real-time epidemiological telemetry ring" };
+                    spawnedObjects.push(new SpringObject(mesh, 'torus', pos.x, pos.y, pos.z));
+                    updateNodePill();
+                };
+
+                window.spawnDNAHelix = function() {
+                    initAudio();
+                    playSynthChime(720, 'sine', 0.25);
+                    const pos = getRandomSpawnPos();
+                    const helixGroup = new THREE.Group();
+                    const strandCount = 18;
+                    for(let i=0; i<strandCount; i++) {
+                        const t = i * 0.4;
+                        const y = (i - strandCount/2) * 0.2;
+                        const s1 = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), new THREE.MeshBasicMaterial({ color: 0x00F0FF }));
+                        s1.position.set(Math.cos(t) * 0.6, y, Math.sin(t) * 0.6);
+                        const s2 = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), new THREE.MeshBasicMaterial({ color: 0xEC4899 }));
+                        s2.position.set(Math.cos(t + Math.PI) * 0.6, y, Math.sin(t + Math.PI) * 0.6);
+                        helixGroup.add(s1); helixGroup.add(s2);
+
+                        // Ladder rung
+                        const rungGeom = new THREE.CylinderGeometry(0.02, 0.02, 1.2, 8);
+                        const rungMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.4 });
+                        const rung = new THREE.Mesh(rungGeom, rungMat);
+                        rung.position.set(0, y, 0);
+                        rung.rotation.z = Math.PI / 2;
+                        rung.rotation.y = -t;
+                        helixGroup.add(rung);
                     }
-                    document.getElementById('status-text').innerText = "Burst: Vector Oviposition Multiplied Across Region";
+                    helixGroup.userData = { name: "Viral Genomic Helix", info: "DENV Serotype genetic sequencing node" };
+                    spawnedObjects.push(new SpringObject(helixGroup, 'helix', pos.x, pos.y, pos.z));
+                    updateNodePill();
                 };
 
-                window.resetCamera = function() {
-                    camera.position.set(0, 18, 28);
-                    controls.target.set(0, 2, 0);
+                function updateNodePill() {
+                    totalSpawned++;
+                    document.getElementById('pill-nodes').innerText = `Nodes: ${8 + spawnedObjects.length}`;
+                }
+
+                // Interactive Shockwave & Cyclone Actions
+                window.triggerShockwave = function() {
+                    initAudio();
+                    playSynthChime(220, 'sawtooth', 0.4);
+                    // Repel particles and dynamic objects outward
+                    const positions = particleGeom.attributes.position.array;
+                    for(let i=0; i<particleCount*3; i+=3) {
+                        const vx = positions[i];
+                        const vz = positions[i+2];
+                        const dist = Math.sqrt(vx*vx + vz*vz) + 0.1;
+                        positions[i] += (vx / dist) * 8.0;
+                        positions[i+2] += (vz / dist) * 8.0;
+                    }
+                    particleGeom.attributes.position.needsUpdate = true;
+                    // Flash key lights
+                    keyLight.intensity = 7.0;
+                    setTimeout(() => { keyLight.intensity = 3.2; }, 400);
+                };
+
+                let cycloneActive = false;
+                window.triggerCyclone = function() {
+                    initAudio();
+                    playSynthChime(440, 'triangle', 0.3);
+                    cycloneActive = true;
+                    setTimeout(() => { cycloneActive = false; }, 4000);
+                };
+
+                window.changeMaterialTheme = function(theme) {
+                    currentTheme = theme;
+                    playSynthChime(880, 'sine', 0.12);
+                    // Update all existing division shells
+                    nodeMeshes.forEach(node => {
+                        const d = node.userData;
+                        const shell = node.children[0];
+                        shell.material.dispose();
+                        shell.material = getMaterialForTheme(d.color, d.color);
+                    });
+                };
+
+                window.resetSplineCamera = function() {
+                    controls.reset();
+                    camera.position.copy(baseCamPos);
+                    controls.target.set(0, 1.5, 0);
                     controls.update();
                 };
 
-                // Animation Loop
-                let clock = new THREE.Clock();
+                // --- 10. MOUSE PARALLAX & 3D RAYCASTING ---
+                let mouseX = 0, mouseY = 0;
+                const raycaster = new THREE.Raycaster();
+                const mouseVector = new THREE.Vector2(-999, -999);
+                let hoveredObject = null;
+
+                window.addEventListener('mousemove', (e) => {
+                    const rect = container.getBoundingClientRect();
+                    mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                    mouseVector.x = mouseX;
+                    mouseVector.y = mouseY;
+                });
+
+                // Double click anywhere to spawn an outbreak blob
+                container.addEventListener('dblclick', () => {
+                    window.spawnOrganicVirus();
+                });
+
+                // --- 11. 60 FPS ANIMATION LOOP ---
+                const clock = new THREE.Clock();
+                const tooltipElem = document.getElementById('spline-tooltip');
+                const ttTitle = document.getElementById('tt-title');
+                const ttBody = document.getElementById('tt-body');
+
                 function animate() {
                     requestAnimationFrame(animate);
                     const delta = clock.getDelta();
@@ -976,36 +1444,108 @@ if data_loaded:
 
                     controls.update();
 
-                    // Rotate rings and pulse nodes
-                    nodeMeshes.forEach((mesh, idx) => {
-                        if (mesh.userData.ring) {
-                            mesh.userData.ring.rotation.z += 0.015;
+                    // 1. Mouse Parallax Tilt (Spline signature weightless camera response)
+                    camera.position.x += (baseCamPos.x + mouseX * 2.5 - camera.position.x) * 0.035;
+                    camera.position.y += (baseCamPos.y + mouseY * 1.5 - camera.position.y) * 0.035;
+
+                    // 2. Harmonic breathing & floating for Regional Nodes
+                    nodeMeshes.forEach((node) => {
+                        const u = node.userData;
+                        node.position.y = u.baseY + Math.sin(time * 1.6 + u.phase) * 0.32;
+                        if (u.halo) u.halo.rotation.z += 0.015;
+                        if (u.core) {
+                            const corePulse = 1.0 + Math.sin(time * 3.5 + u.phase) * 0.12;
+                            u.core.scale.set(corePulse, corePulse, corePulse);
                         }
-                        mesh.position.y += Math.sin(time * 2 + idx) * 0.003;
+
+                        // Smooth hover scale interpolation (Spring lerp)
+                        u.currentScale += (u.targetScale - u.currentScale) * 0.12;
+                        node.scale.set(u.currentScale, u.currentScale, u.currentScale);
                     });
 
-                    // Update transmission arc pulses
-                    curveObjects.forEach(c => {
-                        c.t += 0.008;
-                        if (c.t > 1) c.t = 0;
-                        const pos = c.curve.getPoint(c.t);
-                        c.mesh.position.copy(pos);
+                    // 3. Flowing Arcs
+                    arcPulses.forEach(arc => {
+                        arc.t += arc.speed;
+                        if (arc.t > 1.0) arc.t = 0;
+                        arc.mesh.position.copy(arc.curve.getPoint(arc.t));
                     });
 
-                    // Rotate particle cloud
-                    particleSystem.rotation.y += 0.001;
+                    // 4. Update Dynamic Spawned Objects
+                    spawnedObjects.forEach(obj => obj.update(delta));
 
-                    // Animate dynamic objects
-                    dynamicObjects.forEach(obj => {
-                        obj.rotation.x += 0.02;
-                        obj.rotation.y += 0.03;
-                    });
+                    // 5. Ambient Particles & Cyclone Vortex
+                    const positions = particleGeom.attributes.position.array;
+                    for(let i=0; i<particleCount; i++) {
+                        const idx = i * 3;
+                        if (cycloneActive) {
+                            const angle = 0.06;
+                            const x = positions[idx];
+                            const z = positions[idx+2];
+                            positions[idx] = x * Math.cos(angle) - z * Math.sin(angle);
+                            positions[idx+2] = x * Math.sin(angle) + z * Math.cos(angle);
+                            positions[idx+1] += Math.sin(time * 5 + i) * 0.05;
+                        } else {
+                            positions[idx] += particleVelocities[i].vx;
+                            positions[idx+1] += particleVelocities[i].vy;
+                            positions[idx+2] += particleVelocities[i].vz;
+                            if (positions[idx] > 18) positions[idx] = -18;
+                            if (positions[idx] < -18) positions[idx] = 18;
+                            if (positions[idx+1] > 18) positions[idx+1] = 0;
+                            if (positions[idx+1] < -1) positions[idx+1] = 16;
+                        }
+                    }
+                    particleGeom.attributes.position.needsUpdate = true;
+
+                    // 6. Raycast Hover & Screen-Space 3D Tooltip
+                    raycaster.setFromCamera(mouseVector, camera);
+                    const intersects = raycaster.intersectObjects(interactiveObjects, true);
+
+                    if (intersects.length > 0) {
+                        let hit = intersects[0].object;
+                        // Find parent node group if applicable
+                        let parentGroup = hit.userData.parentGroup || hit;
+                        if (hoveredObject !== parentGroup) {
+                            if (hoveredObject && hoveredObject.userData) {
+                                hoveredObject.userData.targetScale = 1.0;
+                            }
+                            hoveredObject = parentGroup;
+                            if (hoveredObject.userData) {
+                                hoveredObject.userData.targetScale = 1.32;
+                                playSynthChime(640, 'sine', 0.08);
+                            }
+                        }
+
+                        // Project 3D coordinate to 2D Screen Space
+                        const targetPos = new THREE.Vector3();
+                        parentGroup.getWorldPosition(targetPos);
+                        targetPos.y += 1.6;
+                        targetPos.project(camera);
+
+                        const screenX = (targetPos.x * 0.5 + 0.5) * container.clientWidth;
+                        const screenY = (-(targetPos.y * 0.5) + 0.5) * container.clientHeight;
+
+                        tooltipElem.style.left = `${screenX}px`;
+                        tooltipElem.style.top = `${screenY}px`;
+                        tooltipElem.classList.add('active');
+
+                        const u = parentGroup.userData;
+                        ttTitle.innerHTML = `${u.name || 'Outbreak Entity'} <span class="tooltip-badge" style="background: rgba(239, 68, 68, 0.25); color: #FCA5A5;">${u.risk || 'Live Object'}</span>`;
+                        ttBody.innerHTML = u.cases ? `Incidence: ${u.inc} • Cases: ${u.cases}` : (u.info || 'Interactive 3D Mesh');
+                        container.style.cursor = 'pointer';
+                    } else {
+                        if (hoveredObject && hoveredObject.userData) {
+                            hoveredObject.userData.targetScale = 1.0;
+                            hoveredObject = null;
+                        }
+                        tooltipElem.classList.remove('active');
+                        container.style.cursor = 'default';
+                    }
 
                     renderer.render(scene, camera);
                 }
                 animate();
 
-                // Responsive resize
+                // Responsive Canvas Resize
                 window.addEventListener('resize', () => {
                     camera.aspect = container.clientWidth / container.clientHeight;
                     camera.updateProjectionMatrix();
@@ -1016,11 +1556,12 @@ if data_loaded:
         </html>
         """
 
-        components.html(three_js_html, height=580, scrolling=False)
+        components.html(spline_3d_html, height=640, scrolling=False)
 
         st.caption(
-            "💡 **Interactive 3D Guidance:** Click double-tap anywhere on the holographic ground to spawn custom 3D outbreak spores. "
-            "Use the Deck Controls to trigger precipitation vortexes or vector swarm bursts."
+            "💡 **Spline 3D Interactive Features:** Move your cursor across the canvas for natural parallax tilt. "
+            "Hover any 3D node to view its floating screen-projected health telemetry pin. "
+            "Use the bottom floating dock to spawn **Virus Blobs**, **Bio Capsules**, **Data Rings**, or **DNA Strands**, switch material shaders, and trigger shockwaves."
         )
 
     # =========================================================================
