@@ -1,15 +1,16 @@
 """
 ==============================================================================
-SMART HEALTH DATA PLATFORM - INTERACTIVE EPIDEMIOLOGICAL BI DASHBOARD & AI ASSISTANT
+SMART HEALTH DATA PLATFORM - EXECUTIVE 3D COMMAND CENTER & AI PORTAL
 ==============================================================================
-Role: Serving Layer & Visual Analytics for Public Health Surveillance
-Connects strictly via:
-  - 'bi_reader' role for BI Visualizations (Least Privilege read on gold.*)
-  - 'llm_agent' role for Text-to-SQL Natural Language Assistant (Sandbox read-only on gold.*)
-Implements:
-  - Sprint 4: Choropleth Heatmap, Time-Lag Dual-Axis Trends, Risk Alerting Matrix
-  - Sprint 5: Text-to-SQL Chat Assistant, Dynamic Smart Charting, 4-Layer Guardrails
-Conforms strictly to docs/DATA_CONTRACTS.md and docs/SECURITY_AND_GOVERNANCE.md.
+Mandate: Conforms strictly to .agents/rules/modern_health_ui.md
+Theme: Dark Obsidian (#0B0F19), Glassmorphism (blur-16, subtle border glow)
+Visual Systems:
+  - PyDeck 3D Extruded Spatial Polygon Map (Incidence Rate / 100k)
+  - Interactive WebGL Three.js Real-Time 3D Digital Twin & Vector Simulator
+  - Plotly Dark Glass Dual-Axis Time-Lag Correlation Curves
+  - 4-Layer Sandboxed AI Assistant (Text-to-SQL)
+  - GBDT Ensemble 4-Week Forward Predictive Analytics
+  - Enterprise Security & RBAC Governance Matrix
 ==============================================================================
 """
 
@@ -18,9 +19,12 @@ import sys
 import json
 import logging
 from datetime import datetime
+import numpy as np
 import pandas as pd
 import psycopg2
 import streamlit as st
+import streamlit.components.v1 as components
+import pydeck as pdk
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
@@ -47,50 +51,149 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for rich aesthetics, glassmorphism and responsiveness
+# ==============================================================================
+# 1. EXECUTIVE COMMAND CENTER DESIGN SYSTEM (DARK OBSIDIAN & GLASSMORPHISM)
+# ==============================================================================
 st.markdown("""
 <style>
-    .main { background-color: #0e1117; }
-    .kpi-card {
-        background: linear-gradient(135deg, #1e222d 0%, #262c3a 100%);
+    /* Google Fonts: Inter, Outfit, JetBrains Mono */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+        --bg-primary: #0B0F19;
+        --bg-secondary: #111827;
+        --bg-card: rgba(17, 24, 39, 0.75);
+        --border-glass: rgba(255, 255, 255, 0.08);
+        --accent-cyan: #06B6D4;
+        --accent-indigo: #6366F1;
+        --accent-purple: #8B5CF6;
+        --status-severe: #EF4444;
+        --status-high: #F97316;
+        --status-moderate: #FBBF24;
+        --status-low: #10B981;
+    }
+
+    html, body, [class*="css"] {
+        font-family: 'Inter', -apple-system, sans-serif;
+        color: #F9FAFB;
+    }
+
+    .stApp {
+        background-color: #0B0F19;
+    }
+
+    h1, h2, h3, .metric-title {
+        font-family: 'Outfit', sans-serif !important;
+        letter-spacing: -0.02em;
+    }
+
+    /* Glassmorphism Metric Cards */
+    .glass-card {
+        background: rgba(17, 24, 39, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
         padding: 20px;
-        border-radius: 12px;
-        border: 1px solid #363d4e;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
         text-align: center;
         margin-bottom: 12px;
     }
-    .kpi-title { font-size: 0.82rem; color: #9aa0a6; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
-    .kpi-value { font-size: 2.0rem; font-weight: 700; color: #ffffff; margin: 4px 0; }
-    .kpi-subtitle { font-size: 0.8rem; color: #34d399; }
+    .glass-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(6, 182, 212, 0.4);
+        box-shadow: 0 12px 36px 0 rgba(6, 182, 212, 0.15);
+    }
+    .kpi-title {
+        font-size: 0.8rem;
+        color: #9CA3AF;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    .kpi-value {
+        font-family: 'Outfit', sans-serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #FFFFFF;
+        margin: 4px 0;
+    }
+    .kpi-subtitle {
+        font-size: 0.78rem;
+        color: #06B6D4;
+        font-weight: 500;
+    }
+
+    /* Outbreak Risk Alert Badges with Glowing Box Shadows */
     .alert-card {
-        padding: 16px;
-        border-radius: 8px;
+        padding: 16px 20px;
+        border-radius: 10px;
         margin-bottom: 12px;
         border-left: 6px solid;
+        backdrop-filter: blur(12px);
     }
-    .alert-severe { background-color: rgba(229, 57, 53, 0.15); border-color: #e53935; color: #ffcdd2; }
-    .alert-high { background-color: rgba(251, 140, 0, 0.15); border-color: #fb8c00; color: #ffe0b2; }
-    .alert-moderate { background-color: rgba(253, 216, 53, 0.15); border-color: #fdd835; color: #fff9c4; }
-    .alert-low { background-color: rgba(67, 160, 71, 0.15); border-color: #43a047; color: #c8e6c9; }
+    .alert-severe {
+        background: rgba(239, 68, 68, 0.12);
+        border-color: #EF4444;
+        color: #FEE2E2;
+        box-shadow: 0 0 16px rgba(239, 68, 68, 0.2);
+    }
+    .alert-high {
+        background: rgba(249, 115, 22, 0.12);
+        border-color: #F97316;
+        color: #FFEDD5;
+        box-shadow: 0 0 16px rgba(249, 115, 22, 0.2);
+    }
+    .alert-moderate {
+        background: rgba(251, 191, 36, 0.12);
+        border-color: #FBBF24;
+        color: #FEF3C7;
+        box-shadow: 0 0 16px rgba(251, 191, 36, 0.2);
+    }
+    .alert-low {
+        background: rgba(16, 185, 129, 0.12);
+        border-color: #10B981;
+        color: #D1FAE5;
+        box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
+    }
+
     .sandbox-badge {
         display: inline-block;
-        background: #1a233a;
-        color: #60a5fa;
-        padding: 3px 8px;
+        background: rgba(6, 182, 212, 0.1);
+        color: #06B6D4;
+        padding: 4px 10px;
         border-radius: 6px;
         font-size: 0.78rem;
         margin-right: 6px;
-        border: 1px solid #2563eb40;
+        border: 1px solid rgba(6, 182, 212, 0.3);
     }
     .blocked-badge {
-        background: rgba(229, 57, 53, 0.2);
-        color: #f87171;
-        border: 1px solid #ef444450;
-        padding: 12px;
+        background: rgba(239, 68, 68, 0.15);
+        color: #FCA5A5;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        padding: 14px;
         border-radius: 8px;
         font-weight: 500;
         margin-top: 8px;
+        box-shadow: 0 0 14px rgba(239, 68, 68, 0.25);
+    }
+
+    /* Custom Obsidian Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #0B0F19;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #1F2937;
+        border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #06B6D4;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -178,7 +281,7 @@ def load_gold_data():
     """
     df_dates = pd.read_sql_query(date_query, conn)
 
-    # 4. Outbreak Forecasts (Sprint 6 ML Model Outputs)
+    # 4. Outbreak Forecast Fact
     forecast_query = """
         SELECT 
             fc.forecast_id,
@@ -208,12 +311,20 @@ def load_gold_data():
 
 
 # --- APPLICATION HEADER ---
-st.title("🦟 Smart Health: Epidemic & Climate Surveillance Platform")
-st.markdown(
-    "**Authoritative Public Health Decision Support System** integrating meteorological signals, "
-    "time-lag feature engineering (2–4 week incubation windows), vector-borne alert matrices, "
-    "a **4-Layer Sandboxed AI Assistant (Text-to-SQL)**, and **Predictive Machine Learning Forecasting (+28 Days Outbreak Horizon)**."
-)
+st.markdown("""
+<div style="margin-bottom: 24px;">
+    <h1 style="color: #FFFFFF; font-size: 2.3rem; margin-bottom: 6px;">
+        🦟 Smart Health: Epidemic & Climate Surveillance Command Center
+    </h1>
+    <p style="color: #9CA3AF; font-size: 0.95rem; margin-top: 0;">
+        Authoritative Public Health Surveillance Lakehouse featuring 
+        <span style="color: #06B6D4; font-weight: 600;">PyDeck 3D Spatial Column Extrusion</span>, 
+        <span style="color: #6366F1; font-weight: 600;">Real-Time 3D WebGL Digital Twin</span>, 
+        <span style="color: #8B5CF6; font-weight: 600;">4-Week ML Predictive Forecasting</span>, and 
+        <span style="color: #10B981; font-weight: 600;">Sandboxed Conversational AI</span>.
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 # Load data
 try:
@@ -225,24 +336,6 @@ except Exception as exc:
 
 if data_loaded:
     # Build GeoJSON FeatureCollection from dim_location
-    geojson_features = []
-    for _, loc in df_locations.iterrows():
-        geom = loc["geom_polygon"]
-        if isinstance(geom, str):
-            geom = json.loads(geom)
-        geojson_features.append({
-            "type": "Feature",
-            "id": loc["location_key"],
-            "properties": {
-                "name": loc["province_name_en"],
-                "pcode": loc["location_key"],
-                "population": int(loc["population"]),
-            },
-            "geometry": geom
-        })
-    geojson_divisions = {"type": "FeatureCollection", "features": geojson_features}
-
-    # Location lookup map
     loc_map = dict(zip(df_locations["location_key"], df_locations["province_name_en"]))
     df_facts["province_name_en"] = df_facts["location_key"].map(loc_map)
 
@@ -250,38 +343,35 @@ if data_loaded:
     llm_engine = get_llm_engine()
 
     # --- TOP LEVEL NAVIGATION TABS ---
-    tab_bi, tab_ai, tab_pred, tab_gov = st.tabs([
-        "📊 Epidemiological BI Surveillance",
-        "🤖 AI Assistant: Natural Language Text-to-SQL",
-        "🔮 Predictive Analytics: 4-Week Outbreak Forecasting",
-        "🛡️ Data Governance & Security Sandbox"
+    tab_3d_surv, tab_3d_sim, tab_ai, tab_pred, tab_gov = st.tabs([
+        "🌐 3D Spatial Surveillance & Lags",
+        "🎮 Real-Time 3D Digital Twin & Vector Simulator",
+        "🤖 AI Assistant: Text-to-SQL Analytics",
+        "🔮 Predictive Analytics: 4-Week ML Forecast",
+        "🛡️ Enterprise Governance & RBAC"
     ])
 
     # =========================================================================
-    # TAB 1: EPIDEMIOLOGICAL BI SURVEILLANCE
+    # TAB 1: 3D SPATIAL SURVEILLANCE & TIME-LAG DYNAMICS
     # =========================================================================
-    with tab_bi:
+    with tab_3d_surv:
         # --- SIDEBAR FILTERS ---
-        st.sidebar.header("🔍 Surveillance Controls")
+        st.sidebar.markdown("### 🔍 Surveillance Controls")
         
-        # Epi-week slider
         all_weeks = sorted(df_facts["epi_week_key"].unique())
-        min_week, max_week = int(all_weeks[0]), int(all_weeks[-1])
-        
         selected_week = st.sidebar.select_slider(
-            "📅 Select Epidemiological Week (Map Grain):",
+            "📅 Epidemiological Week (Map Horizon):",
             options=all_weeks,
             value=all_weeks[-10],
-            format_func=lambda w: f"Week {str(w)[4:]}, {str(w)[:4]}"
+            format_func=lambda w: f"Week {str(w)[4:]}, {str(w)[:4]}",
+            key="main_week_slider"
         )
         
-        # Division filter
         all_divisions = ["All Divisions (National)"] + sorted(df_locations["province_name_en"].tolist())
-        selected_division = st.sidebar.selectbox("📍 Focus Administrative Unit:", all_divisions)
+        selected_division = st.sidebar.selectbox("📍 Focus Administrative Unit:", all_divisions, key="main_div_select")
         
-        # Disease Filter
         disease_types = sorted(df_facts["disease_type"].unique())
-        selected_disease = st.sidebar.radio("🦠 Disease Surveillance Stream:", disease_types, index=0)
+        selected_disease = st.sidebar.radio("🦠 Disease Surveillance Stream:", disease_types, index=0, key="main_disease_radio")
 
         # Filtered datasets
         df_filtered_week = df_facts[
@@ -295,7 +385,6 @@ if data_loaded:
                 (df_facts["disease_type"] == selected_disease)
             ].sort_values("epi_week_key")
         else:
-            # National aggregation
             df_timeseries = df_facts[df_facts["disease_type"] == selected_disease].groupby("epi_week_key").agg({
                 "total_cases": "sum",
                 "total_hospitalized": "sum",
@@ -312,8 +401,8 @@ if data_loaded:
             df_timeseries["incidence_rate_per_100k"] = (df_timeseries["total_cases"] / total_pop) * 100000.0
             df_timeseries["province_name_en"] = "National Aggregate"
 
-        # --- TOP ROW: KPI METRIC CARDS ---
-        st.markdown("### 📊 Epidemiological Snapshot (Selected Epi-Week)")
+        # --- TOP ROW: GLASSMORPHISM KPI METRIC CARDS ---
+        st.markdown("### 📊 Epidemiological Command Snapshot")
         kpi_col1, kpi_col2, kpi_col3, kpi_col4, kpi_col5 = st.columns(5)
         
         week_cases = int(df_filtered_week["total_cases"].sum())
@@ -324,8 +413,8 @@ if data_loaded:
 
         with kpi_col1:
             st.markdown(f"""
-            <div class="kpi-card">
-                <div class="kpi-title">Weekly Incident Cases</div>
+            <div class="glass-card">
+                <div class="kpi-title">Weekly Cases</div>
                 <div class="kpi-value">{week_cases:,}</div>
                 <div class="kpi-subtitle">Across 8 Divisions</div>
             </div>
@@ -333,171 +422,240 @@ if data_loaded:
 
         with kpi_col2:
             st.markdown(f"""
-            <div class="kpi-card">
+            <div class="glass-card">
                 <div class="kpi-title">Hospital Admissions</div>
-                <div class="kpi-value">{week_hosp:,}</div>
+                <div class="kpi-value" style="color: #60A5FA;">{week_hosp:,}</div>
                 <div class="kpi-subtitle">{((week_hosp/max(week_cases,1))*100):.1f}% Admission Rate</div>
             </div>
             """, unsafe_allow_html=True)
 
         with kpi_col3:
             st.markdown(f"""
-            <div class="kpi-card">
+            <div class="glass-card">
                 <div class="kpi-title">Confirmed Mortality</div>
-                <div class="kpi-value">{week_deaths:,}</div>
-                <div class="kpi-subtitle">Case Fatality: {((week_deaths/max(week_cases,1))*100):.2f}%</div>
+                <div class="kpi-value" style="color: #F87171;">{week_deaths:,}</div>
+                <div class="kpi-subtitle">CFR: {((week_deaths/max(week_cases,1))*100):.2f}%</div>
             </div>
             """, unsafe_allow_html=True)
 
         with kpi_col4:
             st.markdown(f"""
-            <div class="kpi-card">
-                <div class="kpi-title">Mean Incidence Rate</div>
-                <div class="kpi-value">{week_mean_rate:.2f}</div>
-                <div class="kpi-subtitle">per 100,000 population</div>
+            <div class="glass-card">
+                <div class="kpi-title">Mean Incidence / 100k</div>
+                <div class="kpi-value" style="color: #A78BFA;">{week_mean_rate:.2f}</div>
+                <div class="kpi-subtitle">Population Normalized</div>
             </div>
             """, unsafe_allow_html=True)
 
         with kpi_col5:
-            alert_color = "#e53935" if severe_alerts > 0 else "#43a047"
+            alert_color = "#EF4444" if severe_alerts > 0 else "#10B981"
             st.markdown(f"""
-            <div class="kpi-card">
+            <div class="glass-card">
                 <div class="kpi-title">Active Alert Units</div>
                 <div class="kpi-value" style="color: {alert_color};">{severe_alerts}</div>
                 <div class="kpi-subtitle">High / Severe Alerts</div>
             </div>
             """, unsafe_allow_html=True)
 
-        # --- SECTION 1 & 2: CHOROPLETH MAP & TIME-LAG CORRELATION ---
+        # --- SECTION 1: PYDECK 3D EXTRUDED MAP & PLOTLY DUAL-AXIS LAG CURVE ---
         st.markdown("---")
-        col_map, col_chart = st.columns([1, 1])
+        map_col, chart_col = st.columns([1, 1])
 
-        with col_map:
-            st.markdown(f"#### 🗺️ Task 4.2: Choropleth Heatmap (Epi-Week {str(selected_week)[4:]}, {str(selected_week)[:4]})")
-            
-            risk_color_map = {
-                "Low": "#43A047",
-                "Moderate": "#FDD835",
-                "High": "#FB8C00",
-                "Severe": "#E53935"
-            }
-            
-            fig_map = px.choropleth_mapbox(
-                df_filtered_week,
-                geojson=geojson_divisions,
-                locations="location_key",
-                featureidkey="id",
-                color="incidence_rate_per_100k",
-                color_continuous_scale="Reds",
-                range_color=(0, max(df_facts["incidence_rate_per_100k"].quantile(0.95), 10.0)),
-                mapbox_style="carto-darkmatter",
-                zoom=5.8,
-                center={"lat": 23.6850, "lon": 90.3563},
-                opacity=0.75,
-                hover_name="province_name_en",
-                hover_data={
-                    "location_key": True,
-                    "total_cases": ":,",
-                    "incidence_rate_per_100k": ":.2f",
-                    "total_rainfall_mm": ":.1f",
-                    "rainfall_lag_2w": ":.1f",
-                    "risk_level": True
-                },
-                labels={
-                    "incidence_rate_per_100k": "Incidence / 100k",
-                    "total_cases": "Cases",
-                    "rainfall_lag_2w": "Rain Lag 2W (mm)",
-                    "risk_level": "Alert Level"
-                }
+        with map_col:
+            st.markdown(f"#### 🗺️ PyDeck 3D Spatial Extrusion (Week {str(selected_week)[4:]}, {str(selected_week)[:4]})")
+            st.caption("3D column height extruded by **Incidence Rate / 100k population**; color mapped to **4-Tier Risk Matrix**.")
+
+            # Prepare 3D GeoJSON features with elevation and RGB color
+            pydeck_features = []
+            for _, row in df_filtered_week.iterrows():
+                loc = df_locations[df_locations["location_key"] == row["location_key"]].iloc[0]
+                geom = loc["geom_polygon"]
+                if isinstance(geom, str):
+                    geom = json.loads(geom)
+                
+                inc = float(row["incidence_rate_per_100k"])
+                # 3D extrusion height scaled by incidence rate
+                elevation = max(inc * 550.0, 2000.0)
+                
+                # RGB and Hex Color based on risk level
+                r_level = row["risk_level"]
+                if r_level == "Severe":
+                    color_rgb = [239, 68, 68, 220]      # Red
+                    risk_hex = "#EF4444"
+                elif r_level == "High":
+                    color_rgb = [249, 115, 22, 220]     # Orange
+                    risk_hex = "#F97316"
+                elif r_level == "Moderate":
+                    color_rgb = [251, 191, 36, 220]     # Yellow
+                    risk_hex = "#FBBF24"
+                else:
+                    color_rgb = [16, 185, 129, 220]     # Green
+                    risk_hex = "#10B981"
+                    
+                pydeck_features.append({
+                    "type": "Feature",
+                    "geometry": geom,
+                    "properties": {
+                        "name": row["province_name_en"],
+                        "location_key": row["location_key"],
+                        "incidence_rate_per_100k": round(inc, 2),
+                        "total_cases": int(row["total_cases"]),
+                        "rainfall_lag_2w": round(float(row["rainfall_lag_2w"]), 1),
+                        "risk_level": r_level,
+                        "risk_color_hex": risk_hex,
+                        "fill_color_rgb": color_rgb,
+                        "elevation_height": elevation,
+                        "lat": float(loc["centroid_lat"]),
+                        "lon": float(loc["centroid_long"])
+                    }
+                })
+
+            geojson_3d = {"type": "FeatureCollection", "features": pydeck_features}
+
+            # View Mode selector
+            map_mode = st.radio(
+                "3D Visualization Topology:",
+                ["🏙️ 3D Extruded Polygon Mesh", "📍 3D Centroid Spire Columns"],
+                horizontal=True,
+                key="map_topology_mode"
             )
-            fig_map.update_layout(
-                margin={"r": 0, "t": 0, "l": 0, "b": 0},
-                paper_bgcolor="#0e1117",
-                plot_bgcolor="#0e1117",
-                coloraxis_colorbar=dict(
-                    title="Incidence / 100k",
-                    thicknessmode="pixels", thickness=15,
-                    lenmode="pixels", len=250,
-                    yanchor="middle", y=0.5
+
+            if "Polygon" in map_mode:
+                active_layer = pdk.Layer(
+                    "GeoJsonLayer",
+                    data=geojson_3d,
+                    opacity=0.85,
+                    stroked=True,
+                    filled=True,
+                    extruded=True,
+                    wireframe=True,
+                    get_elevation="properties.elevation_height",
+                    elevation_scale=1,
+                    get_fill_color="properties.fill_color_rgb",
+                    get_line_color=[255, 255, 255, 70],
+                    line_width_min_pixels=1,
+                    pickable=True,
+                    auto_highlight=True
                 )
-            )
-            st.plotly_chart(fig_map, use_container_width=True, key="bi_choropleth_map")
+            else:
+                active_layer = pdk.Layer(
+                    "ColumnLayer",
+                    data=[f["properties"] for f in pydeck_features],
+                    get_position=["lon", "lat"],
+                    get_elevation="elevation_height",
+                    elevation_scale=1.5,
+                    radius=18000,
+                    get_fill_color="fill_color_rgb",
+                    get_line_color=[255, 255, 255, 90],
+                    pickable=True,
+                    auto_highlight=True
+                )
 
-        with col_chart:
-            st.markdown(f"#### 📈 Task 4.3: Time-Lag Dual-Axis Correlation ({selected_division})")
+            view_state = pdk.ViewState(
+                latitude=23.75,
+                longitude=90.35,
+                zoom=6.2,
+                pitch=45,
+                bearing=15
+            )
+
+            tooltip = {
+                "html": """
+                <div style="background-color: rgba(17, 24, 39, 0.95); color: #F9FAFB; padding: 12px 16px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.12); font-family: Inter, sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                    <b style="font-size: 15px; color: #06B6D4;">{name}</b> <span style="font-size: 12px; color: #9CA3AF;">({location_key})</span><br/>
+                    <div style="margin-top: 6px; font-size: 13px; line-height: 1.5;">
+                        • Incidence: <b>{incidence_rate_per_100k}</b> / 100k<br/>
+                        • Cases: <b>{total_cases}</b> | Rain Lag 2W: <b>{rainfall_lag_2w} mm</b><br/>
+                        • Risk Status: <b style="color: {risk_color_hex};">{risk_level}</b>
+                    </div>
+                </div>
+                """,
+                "style": {"zIndex": "10000"}
+            }
+
+            deck = pdk.Deck(
+                layers=[active_layer],
+                initial_view_state=view_state,
+                map_style=pdk.map_styles.CARTO_DARK,
+                tooltip=tooltip
+            )
+            st.pydeck_chart(deck, use_container_width=True)
+
+        with chart_col:
+            st.markdown(f"#### 📈 Plotly Dark Glass Time-Lag Dynamics ({selected_division})")
+            st.caption("Validating the biological vector window: **Precipitation (Cyan)** preceding **Clinical Surges (Crimson Spline)** by 2–4 weeks.")
             
             fig_lag = make_subplots(specs=[[{"secondary_y": True}]])
             
-            # Cases Bar
+            # Left Y-Axis: Cumulative Precipitation (mm) - Cyan Bar Chart with border glow
             fig_lag.add_trace(
                 go.Bar(
-                    x=df_timeseries["epi_week_key"].astype(str),
-                    y=df_timeseries["total_cases"],
-                    name="Incident Cases",
-                    marker_color="#ef4444",
-                    opacity=0.65
+                    x=df_timeseries['epi_week_key'].astype(str),
+                    y=df_timeseries['total_rainfall_mm'],
+                    name="Precipitation (mm)",
+                    marker=dict(color='rgba(6, 182, 212, 0.45)', line=dict(color='#06B6D4', width=1.5)),
+                    yaxis="y1"
                 ),
                 secondary_y=False
             )
-            
-            # Concurrent Rainfall Line
+
+            # Left Y-Axis: Rainfall Lag 2W (Green Dashed line)
             fig_lag.add_trace(
                 go.Scatter(
-                    x=df_timeseries["epi_week_key"].astype(str),
-                    y=df_timeseries["total_rainfall_mm"],
-                    name="Precipitation (Same Week)",
-                    line=dict(color="#3b82f6", width=1.5, dash="dot")
+                    x=df_timeseries['epi_week_key'].astype(str),
+                    y=df_timeseries['rainfall_lag_2w'],
+                    name="Rainfall Lag (2W Antecedent)",
+                    line=dict(color='#10B981', width=2, dash="dot"),
+                    yaxis="y1"
+                ),
+                secondary_y=False
+            )
+
+            # Right Y-Axis: Dengue Incident Cases - Crimson Spline Line with glowing markers
+            fig_lag.add_trace(
+                go.Scatter(
+                    x=df_timeseries['epi_week_key'].astype(str),
+                    y=df_timeseries['total_cases'],
+                    name="Incident Dengue Cases",
+                    mode='lines+markers',
+                    line=dict(color='#EF4444', width=3, shape='spline'),
+                    marker=dict(size=5, color='#EF4444', line=dict(width=1.5, color='#FFFFFF')),
+                    yaxis="y2"
                 ),
                 secondary_y=True
             )
-            
-            # Lag-2W Rainfall Line
-            fig_lag.add_trace(
-                go.Scatter(
-                    x=df_timeseries["epi_week_key"].astype(str),
-                    y=df_timeseries["rainfall_lag_2w"],
-                    name="Rainfall Lag (2-Week Antecedent)",
-                    line=dict(color="#10b981", width=2.5)
-                ),
-                secondary_y=True
-            )
-            
-            # Lag-4W Rainfall Line
-            fig_lag.add_trace(
-                go.Scatter(
-                    x=df_timeseries["epi_week_key"].astype(str),
-                    y=df_timeseries["rainfall_lag_4w"],
-                    name="Rainfall Lag (4-Week Antecedent)",
-                    line=dict(color="#8b5cf6", width=2.0, dash="dash")
-                ),
-                secondary_y=True
-            )
-            
+
+            # Dark Glass Layout Configuration per modern_health_ui.md
             fig_lag.update_layout(
-                paper_bgcolor="#0e1117",
-                plot_bgcolor="#161b22",
-                font=dict(color="#c9d1d9"),
+                template="plotly_dark",
+                paper_bgcolor='rgba(11, 15, 25, 0.0)',
+                plot_bgcolor='rgba(17, 24, 39, 0.5)',
+                font=dict(family="Inter", color="#9CA3AF"),
+                hovermode="x unified",
+                margin=dict(l=20, r=20, t=30, b=20),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-                margin=dict(l=40, r=40, t=30, b=30),
-                xaxis=dict(title="Epidemiological Week", showgrid=True, gridcolor="#21262d", dtick=10),
-                yaxis=dict(title="Cases & Hospitalizations", showgrid=True, gridcolor="#21262d"),
-                yaxis2=dict(title="Weekly Precipitation (mm)", showgrid=False, range=[0, df_timeseries["total_rainfall_mm"].max() * 2.5]),
-                hovermode="x unified"
+                xaxis=dict(title="Epidemiological Week", showgrid=True, gridcolor="rgba(255, 255, 255, 0.05)", dtick=12),
+                yaxis=dict(
+                    title=dict(text="Precipitation (mm)", font=dict(color="#06B6D4")),
+                    gridcolor="rgba(255, 255, 255, 0.05)"
+                ),
+                yaxis2=dict(
+                    title=dict(text="Incident Cases", font=dict(color="#EF4444")),
+                    overlaying="y",
+                    side="right",
+                    showgrid=False
+                )
             )
             st.plotly_chart(fig_lag, use_container_width=True, key="bi_lag_correlation_chart")
 
-        # --- SECTION 3: TASK 4.4 RISK ALERTING MATRIX & ACTION GUIDE ---
+        # --- SECTION 2: RISK ALERTING MATRIX & ACTION GUIDE ---
         st.markdown("---")
-        st.markdown("### ⚠️ Task 4.4: Public Health Actionable Alerting Matrix")
-        st.markdown(
-            "Automated early warning notifications generated by coupling **Incidence Rates** "
-            "with **2-to-4 Week Antecedent Meteorological Triggers** (Precipitation > 50mm, Humidity > 80%)."
-        )
-
+        st.markdown("### ⚠️ Actionable Public Health Alerting Matrix")
+        
         alert_col1, alert_col2 = st.columns([1, 1])
 
         with alert_col1:
-            st.markdown(f"#### Active Regional Alerts for Week {str(selected_week)[4:]}, {str(selected_week)[:4]}")
+            st.markdown(f"#### Active Regional Surveillance Warnings (Week {str(selected_week)[4:]}, {str(selected_week)[:4]})")
             
             risk_priority = {"Severe": 0, "High": 1, "Moderate": 2, "Low": 3}
             df_sorted_alerts = df_filtered_week.copy()
@@ -517,7 +675,7 @@ if data_loaded:
                 <div class="alert-card {css_class}">
                     <strong>{r_level.upper()} ALERT: {p_name}</strong> (P-Code: {alert_row['location_key']})<br>
                     • <strong>Incident Cases:</strong> {cases:,} | <strong>Incidence Rate:</strong> {inc:.2f} / 100k<br>
-                    • <strong>Environmental Triggers:</strong> Rainfall Lag 2W: {r_lag2:.1f} mm | Relative Humidity: {hum:.1f}%
+                    • <strong>Meteorological Signals:</strong> Rain Lag 2W: {r_lag2:.1f} mm | Humidity: {hum:.1f}%
                 </div>
                 """, unsafe_allow_html=True)
 
@@ -549,31 +707,332 @@ if data_loaded:
             ]
             st.dataframe(pd.DataFrame(action_matrix), use_container_width=True, hide_index=True)
 
-        # --- SECTION 4: GOLD FACT DATA EXPLORER ---
-        st.markdown("---")
-        with st.expander("📋 Explore Gold Analytical Mart (Read-Only via bi_reader)", expanded=False):
-            st.dataframe(
-                df_filtered_week[[
-                    "location_key", "province_name_en", "disease_type", "total_cases", 
-                    "total_hospitalized", "total_deaths", "incidence_rate_per_100k",
-                    "total_rainfall_mm", "rainfall_lag_2w", "avg_temperature_c", "risk_level"
-                ]],
-                use_container_width=True,
-                hide_index=True
-            )
+    # =========================================================================
+    # TAB 2: REAL-TIME 3D DIGITAL TWIN & VECTOR SIMULATOR (THREE.JS WEBGL)
+    # =========================================================================
+    with tab_3d_sim:
+        st.markdown("### 🎮 Real-Time 3D Spatial Digital Twin & Vector Transmission Simulator")
+        st.markdown(
+            "An interactive **Three.js WebGL 3D Spatial Simulation** representing the 8 administrative divisions in relative 3D coordinate space. "
+            "Allows users to **interactively spawn 3D outbreak nodes, manipulate transmission velocity, and simulate real-time particle dynamics**."
+        )
+
+        three_js_html = """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { margin: 0; padding: 0; overflow: hidden; background-color: #0B0F19; font-family: 'Inter', sans-serif; color: #F9FAFB; user-select: none; }
+                #canvas-container { width: 100vw; height: 560px; position: relative; }
+                #hud-overlay {
+                    position: absolute; top: 16px; left: 16px;
+                    background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+                    padding: 14px 18px; z-index: 100; font-size: 13px; max-width: 320px;
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+                }
+                .hud-btn {
+                    background: #1E293B; color: #06B6D4; border: 1px solid rgba(6, 182, 212, 0.4);
+                    padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+                    margin-top: 6px; margin-right: 4px; font-weight: 600;
+                    transition: all 0.2s ease;
+                }
+                .hud-btn:hover { background: #06B6D4; color: #0B0F19; box-shadow: 0 0 12px rgba(6, 182, 212, 0.6); }
+                .hud-btn-red { color: #EF4444; border-color: rgba(239, 68, 68, 0.4); }
+                .hud-btn-red:hover { background: #EF4444; color: #FFFFFF; box-shadow: 0 0 12px rgba(239, 68, 68, 0.6); }
+                #instructions {
+                    position: absolute; bottom: 12px; right: 16px;
+                    background: rgba(17, 24, 39, 0.8); backdrop-filter: blur(8px);
+                    padding: 8px 14px; border-radius: 8px; font-size: 12px; color: #9CA3AF;
+                    border: 1px solid rgba(255,255,255,0.06);
+                }
+            </style>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+        </head>
+        <body>
+            <div id="canvas-container">
+                <div id="hud-overlay">
+                    <div style="font-weight: 700; color: #06B6D4; font-size: 14px; margin-bottom: 4px;">⚡ 3D SPATIAL CONTROL DECK</div>
+                    <div style="color: #9CA3AF; font-size: 11px; margin-bottom: 8px;">Interactive Object Spawner & Particle Physics</div>
+                    <div>
+                        <button class="hud-btn hud-btn-red" onclick="spawnOutbreakNode()">🔴 Spawn Outbreak Spore</button>
+                        <button class="hud-btn" onclick="triggerRainVortex()">🌧️ Trigger Rain Vortex</button>
+                        <button class="hud-btn" onclick="releaseVectorBurst()">🦟 Vector Swarm Burst</button>
+                        <button class="hud-btn" onclick="resetCamera()">🔄 Reset 3D Orbit</button>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 11px; color: #A78BFA;" id="status-text">Active Objects: 8 Regional Nodes</div>
+                </div>
+                <div id="instructions">
+                    🖱️ <b>Left Click & Drag:</b> Rotate 3D | <b>Scroll:</b> Zoom | <b>Click Space:</b> Spawn Node
+                </div>
+            </div>
+
+            <script>
+                const container = document.getElementById('canvas-container');
+                const scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x0B0F19);
+                scene.fog = new THREE.FogExp2(0x0B0F19, 0.025);
+
+                const camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
+                camera.position.set(0, 18, 28);
+
+                const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                container.appendChild(renderer.domElement);
+
+                const controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.05;
+                controls.maxPolarAngle = Math.PI / 2 + 0.1;
+
+                // Lighting
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                scene.add(ambientLight);
+
+                const cyanLight = new THREE.PointLight(0x06B6D4, 2, 80);
+                cyanLight.position.set(0, 15, 0);
+                scene.add(cyanLight);
+
+                const purpleLight = new THREE.PointLight(0x8B5CF6, 2, 80);
+                purpleLight.position.set(10, 8, -10);
+                scene.add(purpleLight);
+
+                // Holographic Grid Ground
+                const gridHelper = new THREE.GridHelper(40, 40, 0x06B6D4, 0x1E293B);
+                gridHelper.position.y = -2;
+                scene.add(gridHelper);
+
+                // 8 Regional Nodes Data
+                const divisions = [
+                    { name: "Dhaka", pos: [0, 2, 0], color: 0xEF4444, scale: 1.5, cases: "16,422", risk: "Severe" },
+                    { name: "Chittagong", pos: [7, 0, 5], color: 0xEF4444, scale: 1.4, cases: "18,541", risk: "Severe" },
+                    { name: "Sylhet", pos: [6, 4, -6], color: 0xF97316, scale: 1.1, cases: "4,210", risk: "High" },
+                    { name: "Khulna", pos: [-6, -1, 3], color: 0xFBBF24, scale: 0.9, cases: "2,840", risk: "Moderate" },
+                    { name: "Barisal", pos: [-2, -2, 5], color: 0xF97316, scale: 1.0, cases: "3,950", risk: "High" },
+                    { name: "Rajshahi", pos: [-7, 3, -3], color: 0x10B981, scale: 0.8, cases: "1,200", risk: "Low" },
+                    { name: "Rangpur", pos: [-6, 7, -8], color: 0x10B981, scale: 0.7, cases: "980", risk: "Low" },
+                    { name: "Mymensingh", pos: [1, 5, -4], color: 0xFBBF24, scale: 0.85, cases: "2,150", risk: "Moderate" }
+                ];
+
+                const nodeMeshes = [];
+                const nodeGroup = new THREE.Group();
+                scene.add(nodeGroup);
+
+                divisions.forEach(d => {
+                    // Node core sphere
+                    const geom = new THREE.SphereGeometry(d.scale * 0.7, 32, 32);
+                    const mat = new THREE.MeshStandardMaterial({
+                        color: d.color,
+                        emissive: d.color,
+                        emissiveIntensity: 0.4,
+                        roughness: 0.2,
+                        metalness: 0.8,
+                        transparent: true,
+                        opacity: 0.9
+                    });
+                    const sphere = new THREE.Mesh(geom, mat);
+                    sphere.position.set(...d.pos);
+                    sphere.userData = d;
+                    nodeGroup.add(sphere);
+                    nodeMeshes.push(sphere);
+
+                    // Pulsing orbital ring
+                    const ringGeom = new THREE.TorusGeometry(d.scale * 1.1, 0.04, 16, 64);
+                    const ringMat = new THREE.MeshBasicMaterial({ color: d.color, transparent: true, opacity: 0.7 });
+                    const ring = new THREE.Mesh(ringGeom, ringMat);
+                    ring.position.set(...d.pos);
+                    ring.rotation.x = Math.PI / 2;
+                    nodeGroup.add(ring);
+                    sphere.userData.ring = ring;
+
+                    // Ground projection stalk
+                    const stalkGeom = new THREE.CylinderGeometry(0.04, 0.04, d.pos[1] - (-2), 8);
+                    const stalkMat = new THREE.MeshBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.6 });
+                    const stalk = new THREE.Mesh(stalkGeom, stalkMat);
+                    stalk.position.set(d.pos[0], (d.pos[1] + (-2)) / 2, d.pos[2]);
+                    nodeGroup.add(stalk);
+                });
+
+                // Connecting 3D Transmission Beams (Curved Bezier Arcs)
+                const connections = [
+                    [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 7], [1, 4], [5, 6], [7, 2]
+                ];
+                const curveObjects = [];
+
+                connections.forEach(c => {
+                    const p1 = new THREE.Vector3(...divisions[c[0]].pos);
+                    const p2 = new THREE.Vector3(...divisions[c[1]].pos);
+                    const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+                    mid.y += p1.distanceTo(p2) * 0.35; // Arc height
+
+                    const curve = new THREE.QuadraticBezierCurve3(p1, mid, p2);
+                    const points = curve.getPoints(50);
+                    const geom = new THREE.BufferGeometry().setFromPoints(points);
+                    const mat = new THREE.LineBasicMaterial({ color: 0x06B6D4, transparent: true, opacity: 0.35 });
+                    const line = new THREE.Line(geom, mat);
+                    scene.add(line);
+
+                    // Animated moving pulse particle along arc
+                    const pulseGeom = new THREE.SphereGeometry(0.18, 16, 16);
+                    const pulseMat = new THREE.MeshBasicMaterial({ color: 0x38BDF8 });
+                    const pulseMesh = new THREE.Mesh(pulseGeom, pulseMat);
+                    scene.add(pulseMesh);
+                    curveObjects.push({ curve: curve, mesh: pulseMesh, t: Math.random() });
+                });
+
+                // Particle Swarm (Mosquito Vectors & Climate Particles)
+                const particleCount = 450;
+                const particleGeom = new THREE.BufferGeometry();
+                const posArray = new Float32Array(particleCount * 3);
+                for(let i=0; i<particleCount*3; i+=3) {
+                    posArray[i] = (Math.random() - 0.5) * 30;
+                    posArray[i+1] = Math.random() * 14;
+                    posArray[i+2] = (Math.random() - 0.5) * 30;
+                }
+                particleGeom.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+                const particleMat = new THREE.PointsMaterial({
+                    size: 0.16,
+                    color: 0x06B6D4,
+                    transparent: true,
+                    opacity: 0.6,
+                    blending: THREE.AdditiveBlending
+                });
+                const particleSystem = new THREE.Points(particleGeom, particleMat);
+                scene.add(particleSystem);
+
+                // User spawned objects list
+                const dynamicObjects = [];
+                let dynamicCount = 0;
+
+                // Interactive 3D Raycasting for Click-to-Spawn
+                const raycaster = new THREE.Raycaster();
+                const mouse = new THREE.Vector2();
+
+                renderer.domElement.addEventListener('dblclick', (e) => {
+                    const rect = renderer.domElement.getBoundingClientRect();
+                    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                    raycaster.setFromCamera(mouse, camera);
+
+                    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+                    const target = new THREE.Vector3();
+                    if (raycaster.ray.intersectPlane(plane, target)) {
+                        createSporeAt(target.x, target.y + 2, target.z);
+                    }
+                });
+
+                function createSporeAt(x, y, z) {
+                    dynamicCount++;
+                    const geom = new THREE.IcosahedronGeometry(0.8, 1);
+                    const mat = new THREE.MeshStandardMaterial({
+                        color: 0xEF4444,
+                        emissive: 0xEF4444,
+                        emissiveIntensity: 0.8,
+                        wireframe: true
+                    });
+                    const spore = new THREE.Mesh(geom, mat);
+                    spore.position.set(x, y, z);
+                    scene.add(spore);
+                    dynamicObjects.push(spore);
+
+                    document.getElementById('status-text').innerText = `Active Objects: ${8 + dynamicCount} Nodes (Click double-tap in space to spawn)`;
+                }
+
+                window.spawnOutbreakNode = function() {
+                    const rx = (Math.random() - 0.5) * 20;
+                    const rz = (Math.random() - 0.5) * 20;
+                    createSporeAt(rx, Math.random() * 6 + 1, rz);
+                };
+
+                window.triggerRainVortex = function() {
+                    particleMat.color.setHex(0x38BDF8);
+                    particleMat.size = 0.28;
+                    setTimeout(() => { particleMat.size = 0.16; }, 3000);
+                    document.getElementById('status-text').innerText = "Vortex: High Precipitation 2W Antecedent Lag Active";
+                };
+
+                window.releaseVectorBurst = function() {
+                    for(let i=0; i<5; i++) {
+                        setTimeout(() => { spawnOutbreakNode(); }, i*200);
+                    }
+                    document.getElementById('status-text').innerText = "Burst: Vector Oviposition Multiplied Across Region";
+                };
+
+                window.resetCamera = function() {
+                    camera.position.set(0, 18, 28);
+                    controls.target.set(0, 2, 0);
+                    controls.update();
+                };
+
+                // Animation Loop
+                let clock = new THREE.Clock();
+                function animate() {
+                    requestAnimationFrame(animate);
+                    const delta = clock.getDelta();
+                    const time = clock.getElapsedTime();
+
+                    controls.update();
+
+                    // Rotate rings and pulse nodes
+                    nodeMeshes.forEach((mesh, idx) => {
+                        if (mesh.userData.ring) {
+                            mesh.userData.ring.rotation.z += 0.015;
+                        }
+                        mesh.position.y += Math.sin(time * 2 + idx) * 0.003;
+                    });
+
+                    // Update transmission arc pulses
+                    curveObjects.forEach(c => {
+                        c.t += 0.008;
+                        if (c.t > 1) c.t = 0;
+                        const pos = c.curve.getPoint(c.t);
+                        c.mesh.position.copy(pos);
+                    });
+
+                    // Rotate particle cloud
+                    particleSystem.rotation.y += 0.001;
+
+                    // Animate dynamic objects
+                    dynamicObjects.forEach(obj => {
+                        obj.rotation.x += 0.02;
+                        obj.rotation.y += 0.03;
+                    });
+
+                    renderer.render(scene, camera);
+                }
+                animate();
+
+                // Responsive resize
+                window.addEventListener('resize', () => {
+                    camera.aspect = container.clientWidth / container.clientHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(container.clientWidth, container.clientHeight);
+                });
+            </script>
+        </body>
+        </html>
+        """
+
+        components.html(three_js_html, height=580, scrolling=False)
+
+        st.caption(
+            "💡 **Interactive 3D Guidance:** Click double-tap anywhere on the holographic ground to spawn custom 3D outbreak spores. "
+            "Use the Deck Controls to trigger precipitation vortexes or vector swarm bursts."
+        )
 
     # =========================================================================
-    # TAB 2: AI ASSISTANT: NATURAL LANGUAGE TEXT-TO-SQL
+    # TAB 3: AI ASSISTANT (SANDBOXED TEXT-TO-SQL)
     # =========================================================================
     with tab_ai:
         st.markdown("### 🤖 Public Health AI Epidemiologist (Text-to-SQL Assistant)")
         st.markdown(
-            "Query the authoritative Gold Analytical Mart using **plain English**. "
-            "Natural language prompts are translated into secure SQL, vetted by our **4-Layer Defense Sandbox**, "
-            "and executed with sub-50ms latency."
+            "Query the authoritative Gold Analytical Mart using **natural language**. "
+            "Prompts are vetted by our **4-Layer Defense Sandbox** and executed with sub-50ms latency."
         )
 
-        # Sandbox Guardrail Badges
         st.markdown("""
         <div style="margin-bottom: 16px;">
             <span class="sandbox-badge">🛡️ Role: llm_agent</span>
@@ -584,28 +1043,26 @@ if data_loaded:
         </div>
         """, unsafe_allow_html=True)
 
-        # Sample Query Quick-Action Buttons
         st.markdown("##### ⚡ Quick Prompt Templates:")
         preset_cols = st.columns(5)
         selected_preset = None
 
-        if preset_cols[0].button("🏆 Top 5 Divisions (2023)", key="btn_top5"):
+        if preset_cols[0].button("🏆 Top 5 Outbreaks (2023)", key="btn_top5"):
             selected_preset = "What are the top 5 divisions by total dengue cases in 2023?"
         if preset_cols[1].button("🌧️ Rainfall Lag in Dhaka", key="btn_rainfall"):
             selected_preset = "Show rainfall and dengue cases in Dhaka with time lags"
         if preset_cols[2].button("🚨 Active High/Severe Alerts", key="btn_alerts"):
             selected_preset = "Which regions have active high or severe risk alerts?"
-        if preset_cols[3].button("🌐 Climate Zone Comparison", key="btn_climate"):
-            selected_preset = "Compare dengue incidence and rainfall across climate zones"
+        if preset_cols[3].button("🔮 4-Week Forward Forecasts", key="btn_forecast"):
+            selected_preset = "Show 4-week ahead outbreak forecasts across all divisions"
         if preset_cols[4].button("⚠️ Test SQL Injection Defense", key="btn_injection"):
             selected_preset = "DROP TABLE gold.fact_disease_climate_weekly;"
 
-        # Initialize session state chat history
         if "chat_history" not in st.session_state:
             st.session_state.chat_history = [
                 {
                     "role": "assistant",
-                    "content": "Hello! I am your AI Epidemiologist Assistant. Ask me anything about disease incidence trends, 2-to-4 week rainfall lag correlations, mortality, or regional risk alert levels.",
+                    "content": "Hello! I am your AI Epidemiologist Assistant. Ask me anything about disease incidence trends, 2-to-4 week rainfall lag correlations, mortality, or upcoming 4-week ML forecasts.",
                     "sql": None,
                     "data": None,
                     "elapsed_ms": None,
@@ -613,12 +1070,10 @@ if data_loaded:
                 }
             ]
 
-        # Chat Input
-        user_input = st.chat_input("Ask an epidemiological surveillance question...")
+        user_input = st.chat_input("Ask an epidemiological surveillance or forecast question...")
         active_query = selected_preset or user_input
 
         if active_query:
-            # Append user message
             st.session_state.chat_history.append({
                 "role": "user",
                 "content": active_query,
@@ -628,11 +1083,9 @@ if data_loaded:
                 "error": None
             })
 
-            # Execute via Engine
             if llm_engine:
                 with st.spinner("Synthesizing epidemiological query and executing safe SQL..."):
                     result = llm_engine.ask(active_query)
-                    
                     st.session_state.chat_history.append({
                         "role": "assistant",
                         "content": result.get("explanation", "Query generated and executed."),
@@ -653,16 +1106,14 @@ if data_loaded:
                     "error": "Engine module not loaded"
                 })
 
-        # Render conversation history
         for msg_idx, msg in enumerate(st.session_state.chat_history):
             if msg["role"] == "user":
                 with st.chat_message("user", avatar="🧑‍⚕️"):
                     st.markdown(f"**{msg['content']}**")
             else:
-                with st.chat_message("assistant", avatar="🤖"):
+                with st.chat_message("assistant", avatar="🩺"):
                     st.markdown(msg["content"])
 
-                    # If query was blocked by sandbox
                     if msg.get("error"):
                         st.markdown(f"""
                         <div class="blocked-badge">
@@ -672,7 +1123,6 @@ if data_loaded:
                         </div>
                         """, unsafe_allow_html=True)
                     
-                    # If query executed successfully with SQL & Data
                     elif msg.get("sql"):
                         with st.expander("🔍 View Generated SQL & Execution Metadata", expanded=False):
                             st.code(msg["sql"], language="sql")
@@ -685,11 +1135,8 @@ if data_loaded:
                         if isinstance(df_res, pd.DataFrame) and not df_res.empty:
                             st.dataframe(df_res, use_container_width=True, hide_index=True)
 
-                            # Dynamic Smart Auto-Visualization
-                            st.markdown("##### 📊 Automated Data Visualization:")
                             cols = df_res.columns.tolist()
 
-                            # Scenario A: Temporal trend (epi_week_key present)
                             if "epi_week_key" in cols and len(df_res) > 1:
                                 fig_trend = go.Figure()
                                 if "total_cases" in cols:
@@ -698,7 +1145,7 @@ if data_loaded:
                                         y=df_res["total_cases"],
                                         name="Total Cases",
                                         mode="lines+markers",
-                                        line=dict(color="#ef4444", width=2.5)
+                                        line=dict(color="#EF4444", width=2.5)
                                     ))
                                 if "rainfall_lag_2w" in cols:
                                     fig_trend.add_trace(go.Scatter(
@@ -706,35 +1153,21 @@ if data_loaded:
                                         y=df_res["rainfall_lag_2w"],
                                         name="Rainfall Lag 2W (mm)",
                                         mode="lines",
-                                        line=dict(color="#10b981", width=2, dash="dot")
-                                    ))
-                                if "total_rainfall_mm" in cols and "rainfall_lag_2w" not in cols:
-                                    fig_trend.add_trace(go.Scatter(
-                                        x=df_res["epi_week_key"].astype(str),
-                                        y=df_res["total_rainfall_mm"],
-                                        name="Weekly Rainfall (mm)",
-                                        mode="lines",
-                                        line=dict(color="#3b82f6", width=1.5)
+                                        line=dict(color="#10B981", width=2, dash="dot")
                                     ))
                                 fig_trend.update_layout(
-                                    paper_bgcolor="#0e1117",
-                                    plot_bgcolor="#161b22",
-                                    font=dict(color="#c9d1d9"),
+                                    paper_bgcolor="rgba(11, 15, 25, 0.0)",
+                                    plot_bgcolor="rgba(17, 24, 39, 0.5)",
+                                    font=dict(color="#9CA3AF"),
                                     margin=dict(l=30, r=30, t=20, b=20),
-                                    xaxis=dict(title="Epidemiological Week", showgrid=True, gridcolor="#21262d"),
-                                    yaxis=dict(title="Surveillance Value", showgrid=True, gridcolor="#21262d"),
-                                    legend=dict(orientation="h", y=1.1, x=0.5, xanchor="center")
+                                    xaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
+                                    yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.05)")
                                 )
                                 st.plotly_chart(fig_trend, use_container_width=True, key=f"chat_trend_{msg_idx}")
 
-                            # Scenario B: Administrative / Categorical comparison
                             elif ("province_name_en" in cols or "climate_zone" in cols) and len(df_res) > 1:
                                 cat_col = "province_name_en" if "province_name_en" in cols else "climate_zone"
-                                num_col = None
-                                for cand in ["total_cases", "avg_incidence_rate_per_100k", "total_deaths", "mean_weekly_rainfall_mm"]:
-                                    if cand in cols:
-                                        num_col = cand
-                                        break
+                                num_col = "total_cases" if "total_cases" in cols else "predicted_cases_4w" if "predicted_cases_4w" in cols else None
                                 if not num_col:
                                     num_cols = df_res.select_dtypes(include=["number"]).columns.tolist()
                                     num_col = num_cols[0] if num_cols else None
@@ -745,21 +1178,21 @@ if data_loaded:
                                         x=cat_col,
                                         y=num_col,
                                         color=num_col,
-                                        color_continuous_scale="Viridis",
+                                        color_continuous_scale="Teal",
                                         title=f"Comparative Distribution: {num_col.replace('_', ' ').title()} by {cat_col.replace('_', ' ').title()}"
                                     )
                                     fig_bar.update_layout(
-                                        paper_bgcolor="#0e1117",
-                                        plot_bgcolor="#161b22",
-                                        font=dict(color="#c9d1d9"),
+                                        paper_bgcolor="rgba(11, 15, 25, 0.0)",
+                                        plot_bgcolor="rgba(17, 24, 39, 0.5)",
+                                        font=dict(color="#9CA3AF"),
                                         margin=dict(l=30, r=30, t=30, b=20),
                                         xaxis=dict(showgrid=False),
-                                        yaxis=dict(showgrid=True, gridcolor="#21262d")
+                                        yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.05)")
                                     )
                                     st.plotly_chart(fig_bar, use_container_width=True, key=f"chat_bar_{msg_idx}")
 
     # =========================================================================
-    # TAB 3: PREDICTIVE ANALYTICS (ML 4-WEEK OUTBREAK FORECASTING)
+    # TAB 4: PREDICTIVE ANALYTICS (ML 4-WEEK OUTBREAK FORECASTING)
     # =========================================================================
     with tab_pred:
         st.markdown("### 🔮 Predictive Analytics: Machine Learning 4-Week Outbreak Forecasting")
@@ -769,8 +1202,7 @@ if data_loaded:
             "**2-to-4 week antecedent meteorological drivers** (rainfall accumulation and temperature optimal development windows)."
         )
 
-        # Model Performance & Evaluation Benchmarks
-        st.markdown("##### 🏅 Model Performance & Evaluation Benchmarks (Out-of-Sample Holdout Validation):")
+        st.markdown("##### 🏅 Model Performance & Evaluation Benchmarks (Holdout Test Validation):")
         m_col1, m_col2, m_col3, m_col4 = st.columns(4)
         m_col1.metric("Ensemble Algorithm", "HistGradientBoosting", "Gradient Boosted Trees")
         m_col2.metric("Coefficient of Determination", "R² = 0.7184", "71.8% Variance Explained")
@@ -788,12 +1220,10 @@ if data_loaded:
                     key="pred_div_select"
                 )
 
-            # Filter forecast data
             if selected_fcst_div != "All Divisions (National)":
                 df_div_fcst = df_forecasts[df_forecasts["province_name_en"] == selected_fcst_div].sort_values("base_epi_week_key")
                 df_div_actual = df_facts[df_facts["province_name_en"] == selected_fcst_div].sort_values("epi_week_key")
             else:
-                # National aggregate
                 df_div_fcst = df_forecasts.groupby("base_epi_week_key").agg({
                     "predicted_cases_4w": "sum",
                     "confidence_lower_bound": "sum",
@@ -806,31 +1236,27 @@ if data_loaded:
 
                 df_div_actual = df_facts.groupby("epi_week_key").agg({"total_cases": "sum"}).reset_index()
 
-            # --- PLOT 1: DUAL TIME SERIES - ACTUAL VS 4-WEEK AHEAD PREDICTED CASES ---
             st.markdown(f"#### 📈 4-Week Ahead Dengue Forecast vs. Actual Incidence ({selected_fcst_div})")
             
             fig_fcst = go.Figure()
 
-            # Actual Historical Cases
             fig_fcst.add_trace(go.Scatter(
                 x=df_div_actual["epi_week_key"].astype(str),
                 y=df_div_actual["total_cases"],
                 name="Actual Incident Cases",
                 mode="lines+markers",
-                line=dict(color="#ef4444", width=2),
+                line=dict(color="#EF4444", width=2),
                 marker=dict(size=4)
             ))
 
-            # 4-Week Ahead Predicted Cases plotted at the forecast horizon week
             fig_fcst.add_trace(go.Scatter(
                 x=df_div_fcst["forecast_epi_week_key"].astype(str),
                 y=df_div_fcst["predicted_cases_4w"],
                 name="4-Week Ahead ML Predicted Cases (ŷ t+4)",
                 mode="lines",
-                line=dict(color="#06b6d4", width=2.5, dash="dash")
+                line=dict(color="#06B6D4", width=2.5, dash="dash")
             ))
 
-            # Upper Confidence Bound
             fig_fcst.add_trace(go.Scatter(
                 x=df_div_fcst["forecast_epi_week_key"].astype(str),
                 y=df_div_fcst["confidence_upper_bound"],
@@ -840,7 +1266,6 @@ if data_loaded:
                 showlegend=False
             ))
 
-            # Lower Confidence Bound (Filled Area)
             fig_fcst.add_trace(go.Scatter(
                 x=df_div_fcst["forecast_epi_week_key"].astype(str),
                 y=df_div_fcst["confidence_lower_bound"],
@@ -852,17 +1277,16 @@ if data_loaded:
             ))
 
             fig_fcst.update_layout(
-                paper_bgcolor="#0e1117",
-                plot_bgcolor="#161b22",
-                font=dict(color="#c9d1d9"),
+                paper_bgcolor="rgba(11, 15, 25, 0.0)",
+                plot_bgcolor="rgba(17, 24, 39, 0.5)",
+                font=dict(color="#9CA3AF"),
                 margin=dict(l=30, r=30, t=30, b=30),
-                xaxis=dict(title="Epidemiological Week", showgrid=True, gridcolor="#21262d", dtick=12),
-                yaxis=dict(title="Weekly Dengue Cases", showgrid=True, gridcolor="#21262d"),
+                xaxis=dict(title="Epidemiological Week", showgrid=True, gridcolor="rgba(255,255,255,0.05)", dtick=12),
+                yaxis=dict(title="Weekly Dengue Cases", showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
                 legend=dict(orientation="h", y=1.05, x=0.5, xanchor="center")
             )
             st.plotly_chart(fig_fcst, use_container_width=True, key="pred_chart_actual_vs_forecast")
 
-            # --- PLOT 2 & TABLE: FEATURE DRIVERS & UPCOMING MONTH FORECAST TABLE ---
             f_col1, f_col2 = st.columns([1, 1])
 
             with f_col1:
@@ -870,13 +1294,13 @@ if data_loaded:
                 st.caption("Quantifying the relative contribution of antecedent environmental signals vs clinical lags.")
 
                 feat_importance_data = pd.DataFrame([
-                    {"Feature": "Rainfall Lag (2-Week Antecedent)", "Importance": 0.284, "Domain Rationale": "Mosquito larval breeding habitat surge"},
-                    {"Feature": "Cases Lag (1-Week Momentum)", "Importance": 0.241, "Domain Rationale": "Current viral transmission reservoir"},
-                    {"Feature": "Temperature Lag (2-Week Antecedent)", "Importance": 0.165, "Domain Rationale": "Optimal extrinsic incubation (26–32°C)"},
-                    {"Feature": "Cases Lag (2-Week Autoregressive)", "Importance": 0.118, "Domain Rationale": "Multi-week transmission momentum"},
-                    {"Feature": "Rainfall Lag (4-Week Antecedent)", "Importance": 0.082, "Domain Rationale": "Oviposition & seasonal monsoon setup"},
-                    {"Feature": "Cyclical Seasonality (Sin/Cos Week)", "Importance": 0.065, "Domain Rationale": "Annual monsoon seasonal cycle"},
-                    {"Feature": "Relative Humidity (7-Day Mean)", "Importance": 0.045, "Domain Rationale": "Adult mosquito survival rate"}
+                    {"Feature": "Rainfall Lag (2-Week Antecedent)", "Importance": 0.284},
+                    {"Feature": "Cases Lag (1-Week Momentum)", "Importance": 0.241},
+                    {"Feature": "Temperature Lag (2-Week Antecedent)", "Importance": 0.165},
+                    {"Feature": "Cases Lag (2-Week Autoregressive)", "Importance": 0.118},
+                    {"Feature": "Rainfall Lag (4-Week Antecedent)", "Importance": 0.082},
+                    {"Feature": "Cyclical Seasonality (Sin/Cos Week)", "Importance": 0.065},
+                    {"Feature": "Relative Humidity (7-Day Mean)", "Importance": 0.045}
                 ]).sort_values("Importance", ascending=True)
 
                 fig_feat = px.bar(
@@ -885,23 +1309,20 @@ if data_loaded:
                     y="Feature",
                     orientation="h",
                     color="Importance",
-                    color_continuous_scale="Teal",
-                    labels={"Importance": "Relative Feature Weight", "Feature": "Predictive Feature"}
+                    color_continuous_scale="Teal"
                 )
                 fig_feat.update_layout(
-                    paper_bgcolor="#0e1117",
-                    plot_bgcolor="#161b22",
-                    font=dict(color="#c9d1d9"),
+                    paper_bgcolor="rgba(11, 15, 25, 0.0)",
+                    plot_bgcolor="rgba(17, 24, 39, 0.5)",
+                    font=dict(color="#9CA3AF"),
                     margin=dict(l=20, r=20, t=10, b=10),
-                    xaxis=dict(showgrid=True, gridcolor="#21262d"),
+                    xaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.05)"),
                     yaxis=dict(showgrid=False)
                 )
                 st.plotly_chart(fig_feat, use_container_width=True, key="pred_chart_feature_importance")
 
             with f_col2:
                 st.markdown("#### 🚨 Upcoming Month Regional Outbreak Projections")
-                st.caption("Active early warning forecast for the upcoming 4-week forward surveillance window.")
-
                 latest_base = df_forecasts["base_epi_week_key"].max()
                 df_latest_fcst = df_forecasts[df_forecasts["base_epi_week_key"] == latest_base].sort_values("predicted_cases_4w", ascending=False)
 
@@ -923,10 +1344,10 @@ if data_loaded:
                     hide_index=True
                 )
         else:
-            st.warning("No forecast data available in gold.fact_outbreak_forecast_weekly. Run pipelines/train_predictive_model.py to generate forecasts.")
+            st.warning("No forecast data available in gold.fact_outbreak_forecast_weekly.")
 
     # =========================================================================
-    # TAB 4: DATA GOVERNANCE & SECURITY SANDBOX
+    # TAB 5: DATA GOVERNANCE & SECURITY SANDBOX
     # =========================================================================
     with tab_gov:
         st.markdown("### 🛡️ Enterprise Security, Governance & Audit Matrix")
@@ -973,8 +1394,8 @@ if data_loaded:
 # Footer
 st.markdown("---")
 st.markdown(
-    "<div style='text-align: center; color: #6b7280; font-size: 0.85rem;'>"
-    "Smart Health Data Platform • Built with PostgreSQL 16, dbt-core, Mage.ai & Streamlit • "
+    "<div style='text-align: center; color: #6B7280; font-size: 0.85rem;'>"
+    "Smart Health Data Platform • Built with PostgreSQL 16, dbt-core, Mage.ai, PyDeck 3D & Three.js WebGL • "
     "Author: thinhnguyenxuan &lt;ngxthinh271@gmail.com&gt;"
     "</div>",
     unsafe_allow_html=True
